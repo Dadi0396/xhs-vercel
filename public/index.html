@@ -422,24 +422,33 @@ if (S.colMap.body >= 0 && row[S.colMap.body]) parts.push(`【正文】${extractT
 }
 
 // ── Claude API ──
+// ── 修改后的新代码（安全且通过 Vercel 代理） ──
 async function callClaude(sys, user) {
-  const CLAUDE_API_KEY = 'sk-ant-xxxxxx'; // 换成你的Claude API Key
-  const res = await fetch(proxyUrl('https://api.anthropic.com/v1/messages'), {
+  // 这里的地址必须指向你项目里的 api/proxy
+  const apiUrl = '/api/proxy?url=' + encodeURIComponent('https://api.anthropic.com/v1/messages');
+  
+  const res = await fetch(apiUrl, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': CLAUDE_API_KEY,
-      'anthropic-version': '2023-06-01'
+    headers: { 
+      'Content-Type': 'application/json'
+      // 注意：这里不再需要传 x-api-key，代理服务器会自动加上
     },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
+      // 建议使用目前最稳定的模型名称
+      model: 'claude-3-sonnet-20240229', 
       max_tokens: 4000,
       system: sys,
       messages: [{ role: 'user', content: user }]
     })
   });
+
+  if (!res.ok) {
+    const errorData = await res.json();
+    throw new Error(errorData.error || 'Claude API 请求失败');
+  }
+
   const d = await res.json();
-  if (d.error) throw new Error('Claude API错误：' + d.error.message);
+  // 解析 Claude 返回的内容
   return d.content?.map(b => b.text || '').join('') || '';
 }
 
