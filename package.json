@@ -1,0 +1,8 @@
+{
+  "name": "my-vercel-app",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "some-package": "^1.0.0"
+  }
+}
