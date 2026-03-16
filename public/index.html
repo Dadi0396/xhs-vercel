@@ -405,9 +405,9 @@ function confirmColMap() {
   const lines = [];
   S.rawRows.forEach((row, i) => {
     const parts = [];
-    if (S.colMap.product >= 0 && row[S.colMap.product]) parts.push(`【产品】${row[S.colMap.product]}`);
-    if (S.colMap.title >= 0 && row[S.colMap.title]) parts.push(`【标题】${row[S.colMap.title]}`);
-    if (S.colMap.body >= 0 && row[S.colMap.body]) parts.push(`【正文】${row[S.colMap.body]}`);
+if (S.colMap.product >= 0 && row[S.colMap.product]) parts.push(`【产品】${extractText(row[S.colMap.product])}`);
+if (S.colMap.title >= 0 && row[S.colMap.title]) parts.push(`【标题】${extractText(row[S.colMap.title])}`);
+if (S.colMap.body >= 0 && row[S.colMap.body]) parts.push(`【正文】${extractText(row[S.colMap.body])}`);
     if (parts.length) lines.push(`--- 第${i+1}篇 ---\n${parts.join('\n')}`);
   });
   S.docContent = lines.join('\n\n');
