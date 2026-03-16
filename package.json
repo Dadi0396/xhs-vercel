@@ -1,8 +1,12 @@
 {
-  "name": "my-vercel-app",
+  "name": "my-claude-app",
   "version": "1.0.0",
   "type": "module",
+  "main": "index.js",
   "dependencies": {
-    "some-package": "^1.0.0"
+    "@anthropic-ai/sdk": "^0.20.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
