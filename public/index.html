@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小红书爆款文案工作台</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600&family=DM+Mono:wght@400;500&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#D93025;--red2:#FFF0EE;--ink:#1C1410;--ink2:#4B3F38;--ink3:#9C8F87;
+  --cream:#FDFAF6;--cream2:#F5F0E8;--cream3:#EDE5D8;--gold:#C8954A;
+  --green:#2A6B4A;--green2:#EAF3ED;--border:#E2D9CE;
+  --shadow:0 2px 12px rgba(28,20,16,.08);--r:10px;
+}
+body{font-family:'Noto Serif SC',serif;background:var(--cream);color:var(--ink);min-height:100vh;line-height:1.7}
+.header{background:var(--ink);color:var(--cream);padding:0 40px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.logo{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:600}
+.logo-dot{width:24px;height:24px;background:var(--red);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;font-family:'DM Mono',monospace}
+.steps{display:flex;gap:4px;align-items:center;font-family:'DM Mono',monospace;font-size:11px}
+.sp{padding:4px 12px;border-radius:20px;color:#888;cursor:pointer;transition:all .2s;border:1px solid transparent}
+.sp.active{background:var(--red);color:#fff}
+.sp.done{color:var(--gold);border-color:rgba(200,149,74,.3)}
+.sep{color:#555;font-size:10px}
+.main{max-width:880px;margin:0 auto;padding:40px 24px 80px}
+.card{background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:28px 32px;margin-bottom:20px;box-shadow:var(--shadow)}
+.ct{font-size:12px;font-family:'DM Mono',monospace;color:var(--ink3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:18px;display:flex;align-items:center;gap:8px}
+.cn{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;font-weight:600}
+.cn-ink{background:var(--ink);color:var(--cream)}
+.cn-red{background:var(--red);color:#fff}
+.cn-green{background:var(--green);color:#fff}
+.fr{margin-bottom:16px}
+label{display:block;font-size:12px;font-family:'DM Mono',monospace;color:var(--ink2);margin-bottom:6px;letter-spacing:.03em}
+input[type=text],input[type=password],textarea,select{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:6px;font-size:14px;font-family:'Noto Serif SC',serif;color:var(--ink);background:var(--cream);transition:border-color .2s,box-shadow .2s;outline:none;resize:vertical}
+input[type=text]:focus,input[type=password]:focus,textarea:focus,select:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(217,48,37,.08);background:#fff}
+input[type=password]{font-family:'DM Mono',monospace;font-size:13px;letter-spacing:.05em}
+.f2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:10px 22px;border-radius:6px;font-size:14px;font-family:'Noto Serif SC',serif;font-weight:600;cursor:pointer;border:none;transition:all .18s;white-space:nowrap}
+.btn-p{background:var(--red);color:#fff}
+.btn-p:hover{background:#C0271D;transform:translateY(-1px);box-shadow:0 4px 16px rgba(217,48,37,.3)}
+.btn-s{background:var(--cream2);color:var(--ink2);border:1px solid var(--border)}
+.btn-s:hover{background:var(--cream3)}
+.btn-g{background:transparent;color:var(--ink3);border:1px solid var(--border)}
+.btn-g:hover{color:var(--ink);border-color:var(--ink3)}
+.btn-gr{background:var(--green);color:#fff}
+.btn-gr:hover{background:#1F5239;transform:translateY(-1px)}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none!important;box-shadow:none!important}
+.br{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+.alert{padding:12px 16px;border-radius:6px;font-size:13px;margin-top:12px;display:flex;align-items:flex-start;gap:8px;line-height:1.6}
+.ai{background:#EFF6FF;color:#1D4ED8;border:1px solid #BFDBFE}
+.as{background:var(--green2);color:var(--green);border:1px solid #BBD9C8}
+.ae{background:var(--red2);color:var(--red);border:1px solid #F5C4BE}
+.aw{background:#FFFBEB;color:#92400E;border:1px solid #FDE68A}
+.pw{margin-top:14px}
+.pb-bg{height:4px;background:var(--cream3);border-radius:4px;overflow:hidden;margin-bottom:8px}
+.pb{height:100%;background:var(--red);border-radius:4px;transition:width .4s ease;width:0%}
+.plog{font-family:'DM Mono',monospace;font-size:11px;color:var(--ink3);max-height:72px;overflow-y:auto;line-height:1.8}
+.rb{background:var(--cream);border:1px solid var(--border);border-radius:8px;padding:18px;margin-top:14px}
+.rb-top{font-size:11px;font-family:'DM Mono',monospace;color:var(--ink3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.rt{font-size:13px;color:var(--ink);white-space:pre-wrap;line-height:1.9;word-break:break-all}
+.kg{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px}
+.kc{background:#fff;border:1px solid var(--border);border-radius:8px;padding:14px 16px}
+.kc-l{font-size:10px;font-family:'DM Mono',monospace;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}
+.kc-c{font-size:13px;color:var(--ink2);line-height:1.7}
+.cb{font-size:11px;font-family:'DM Mono',monospace;padding:4px 10px;border-radius:4px;background:var(--cream2);border:1px solid var(--border);color:var(--ink3);cursor:pointer;transition:all .15s}
+.cb:hover{background:var(--cream3);color:var(--ink)}
+.cb.copied{background:var(--green2);color:var(--green);border-color:#BBD9C8}
+.sec{display:none}.sec.active{display:block}
+hr.dv{border:none;border-top:1px solid var(--border);margin:20px 0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+.spin-d{border-color:rgba(28,20,16,.15);border-top-color:var(--ink2)}
+.tag{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-family:'DM Mono',monospace}
+.tr{background:var(--red2);color:var(--red)}
+.tg{background:var(--green2);color:var(--green)}
+.to{background:#FEF3C7;color:var(--gold)}
+.hint{font-family:'DM Mono',monospace;font-size:11px;color:var(--ink3);margin-top:5px;padding:6px 10px;background:var(--cream2);border-radius:4px;line-height:1.6}
+.preview-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:12px}
+.preview-table th{background:var(--cream2);color:var(--ink2);font-family:'DM Mono',monospace;font-size:11px;font-weight:500;padding:8px 12px;border:1px solid var(--border);text-align:left}
+.preview-table td{padding:8px 12px;border:1px solid var(--border);color:var(--ink2);vertical-align:top;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.preview-table tr:nth-child(even) td{background:var(--cream)}
+.col-map-label{font-size:12px;font-family:'DM Mono',monospace;color:var(--ink2);white-space:nowrap}
+@media(max-width:640px){.main{padding:20px 16px 60px}.card{padding:18px 16px}.f2{grid-template-columns:1fr}.kg{grid-template-columns:1fr}.header{padding:0 16px}.steps{display:none}}
+</style>
+</head>
+<body>
+<header class="header">
+  <div class="logo"><div class="logo-dot">红</div>小红书爆款文案工作台</div>
+  <div class="steps">
+    <span class="sp active" id="nav-1" onclick="goStep(1)">① 配置</span><span class="sep">›</span>
+    <span class="sp" id="nav-2" onclick="goStep(2)">② 读取文案库</span><span class="sep">›</span>
+    <span class="sp" id="nav-3" onclick="goStep(3)">③ AI分析</span><span class="sep">›</span>
+    <span class="sp" id="nav-4" onclick="goStep(4)">④ 写文案</span>
+  </div>
+</header>
+<main class="main">
+
+<!-- STEP 1 -->
+<div class="sec active" id="step-1">
+  <div class="card">
+    <div class="ct"><span class="cn cn-ink">1</span>飞书 API 凭证</div>
+    <div class="f2">
+      <div class="fr"><label>App ID</label><input type="text" id="appId" placeholder="cli_xxxxxxxxxxxxxxxxx"></div>
+      <div class="fr"><label>App Secret</label><input type="password" id="appSecret" placeholder="••••••••••••••••••••"></div>
+    </div>
+    <div class="alert ai">ⓘ 飞书开放平台 → 我的应用 → 凭证与基础信息。需开启权限：<strong>sheets:spreadsheet:readonly</strong> 和 <strong>bitable:app</strong></div>
+  </div>
+  <div class="card">
+    <div class="ct"><span class="cn cn-ink">2</span>爆款文案库（飞书电子表格）</div>
+    <div class="fr">
+      <label>飞书电子表格链接</label>
+      <input type="text" id="sheetUrl" placeholder="https://xxx.feishu.cn/sheets/xxxxxx">
+      <div class="hint">直接从浏览器地址栏复制粘贴即可</div>
+    </div>
+    <div class="fr">
+      <label>工作表名称（可选，留空读取第一个）</label>
+      <input type="text" id="sheetName" placeholder="例如：文案">
+    </div>
+  </div>
+  <div class="card">
+    <div class="ct"><span class="cn cn-red">3</span>输出表格（留空自动新建）</div>
+    <div class="fr"><label>知识点总结表格链接 <span class="tag to">可留空</span></label><input type="text" id="knowledgeTableUrl" placeholder="https://xxx.feishu.cn/base/xxxxxx?table=tblxxxxxx"></div>
+    <div class="fr"><label>生成文案输出表格链接 <span class="tag to">可留空</span></label><input type="text" id="copyTableUrl" placeholder="https://xxx.feishu.cn/base/xxxxxx?table=tblxxxxxx"></div>
+    <div id="created-info" style="display:none" class="alert as"></div>
+  </div>
+  <div class="br"><button class="btn btn-p" onclick="step1Next()">验证配置并继续 →</button></div>
+  <div id="s1-status"></div>
+</div>
+
+<!-- STEP 2 -->
+<div class="sec" id="step-2">
+  <div class="card">
+    <div class="ct"><span class="cn cn-ink">2</span>读取飞书电子表格</div>
+    <p style="font-size:13px;color:var(--ink2);margin-bottom:16px">读取表格内容，自动识别列结构，确认字段映射后进入AI分析。</p>
+    <div class="br">
+      <button class="btn btn-p" id="btn-fetch" onclick="fetchSheet()">开始读取表格</button>
+      <button class="btn btn-g" onclick="goStep(1)">← 返回</button>
+    </div>
+    <div class="pw" id="fetch-pw" style="display:none">
+      <div class="pb-bg"><div class="pb" id="fetch-pb"></div></div>
+      <div class="plog" id="fetch-log"></div>
+    </div>
+    <div id="s2-status"></div>
+  </div>
+  <div class="card" id="col-map-card" style="display:none">
+    <div class="ct"><span class="cn cn-ink">确认字段映射</span></div>
+    <p style="font-size:13px;color:var(--ink2);margin-bottom:16px">请确认各字段对应表格中的哪一列：</p>
+    <div style="display:grid;grid-template-columns:auto 1fr;gap:8px 16px;align-items:center" id="col-map-wrap"></div>
+    <div class="br" style="margin-top:16px"><button class="btn btn-p" onclick="confirmColMap()">确认映射，读取内容 →</button></div>
+    <div id="col-map-status"></div>
+  </div>
+  <div class="card" id="data-preview-card" style="display:none">
+    <div class="ct"><span class="cn cn-green">✓</span>读取结果预览</div>
+    <div style="overflow-x:auto"><table class="preview-table" id="preview-table"></table></div>
+    <div style="margin-top:12px;display:flex;gap:8px">
+      <span class="tag tg" id="row-count"></span>
+      <span class="tag tr" id="col-count"></span>
+    </div>
+    <div class="br" style="margin-top:16px"><button class="btn btn-p" onclick="goStep(3)">进入AI分析 →</button></div>
+  </div>
+</div>
+
+<!-- STEP 3 -->
+<div class="sec" id="step-3">
+  <div class="card">
+    <div class="ct"><span class="cn cn-red">3</span>AI 分析爆款规律</div>
+    <p style="font-size:13px;color:var(--ink2);margin-bottom:16px">Claude 深度分析文案库，提炼食品零食带货核心写作规律，写入飞书知识点表格。</p>
+    <div class="fr"><label>品类补充说明（可选）</label><input type="text" id="catHint" placeholder="例如：苏打饼干、休闲零食、健康代餐"></div>
+    <div class="br">
+      <button class="btn btn-p" id="btn-analyze" onclick="analyzeDoc()">开始AI深度分析</button>
+      <button class="btn btn-g" onclick="goStep(2)">← 返回</button>
+    </div>
+    <div class="pw" id="analyze-pw" style="display:none">
+      <div class="pb-bg"><div class="pb" id="analyze-pb"></div></div>
+      <div class="plog" id="analyze-log"></div>
+    </div>
+    <div id="s3-status"></div>
+  </div>
+  <div id="knowledge-result" style="display:none">
+    <div class="card">
+      <div class="ct"><span class="cn cn-green">✓</span>AI总结的写作知识点</div>
+      <div class="kg" id="kg-grid"></div>
+      <hr class="dv">
+      <div class="rb">
+        <div class="rb-top"><span>综合分析报告</span><button class="cb" onclick="copyEl('full-report',this)">复制</button></div>
+        <div class="rt" id="full-report" style="max-height:260px;overflow-y:auto"></div>
+      </div>
+      <div id="k-save-status" style="display:none;margin-top:12px"></div>
+      <div class="br" style="margin-top:16px">
+        <button class="btn btn-gr" id="btn-save-k" onclick="saveKnowledge()">写入飞书知识点表格</button>
+        <button class="btn btn-p" onclick="goStep(4)">去写文案 →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 4 -->
+<div class="sec" id="step-4">
+  <div class="card">
+    <div class="ct"><span class="cn cn-red">4</span>输入产品信息</div>
+    <div class="fr"><label>产品名称</label><input type="text" id="prodName" placeholder="例如：香美客苏打饼干"></div>
+    <div class="fr"><label>核心卖点（逗号分隔）</label><input type="text" id="prodSell" placeholder="例如：0添加防腐剂、份量超大、19.6元8大包"></div>
+    <div class="f2">
+      <div class="fr"><label>目标人群</label><input type="text" id="audience" placeholder="例如：学生党、上班族"></div>
+      <div class="fr">
+        <label>文案风格</label>
+        <select id="copyStyle">
+          <option value="种草分享">种草分享（真实体验感）</option>
+          <option value="痛点共鸣">痛点共鸣（解决需求）</option>
+          <option value="数字对比">数字对比（性价比突出）</option>
+          <option value="场景代入">场景代入（生活化场景）</option>
+          <option value="反差惊喜">反差惊喜（意外感/反转）</option>
+        </select>
+      </div>
+    </div>
+    <div class="fr">
+      <label>生成数量</label>
+      <select id="copyCount">
+        <option value="1">1篇</option>
+        <option value="2">2篇（不同角度）</option>
+        <option value="3" selected>3篇（多角度对比）</option>
+      </select>
+    </div>
+    <div class="br">
+      <button class="btn btn-p" id="btn-gen" onclick="generateCopy()">AI 生成爆款文案</button>
+      <button class="btn btn-g" onclick="goStep(3)">← 返回</button>
+    </div>
+    <div class="pw" id="gen-pw" style="display:none">
+      <div class="pb-bg"><div class="pb" id="gen-pb"></div></div>
+      <div class="plog" id="gen-log"></div>
+    </div>
+    <div id="s4-status"></div>
+  </div>
+  <div id="copy-results" style="display:none">
+    <div id="copy-cards"></div>
+    <div class="card">
+      <div class="br">
+        <button class="btn btn-gr" id="btn-save-c" onclick="saveCopy()">写入飞书文案表格</button>
+        <button class="btn btn-s" onclick="generateCopy()">重新生成</button>
+      </div>
+      <div id="c-save-status" style="display:none;margin-top:12px"></div>
+    </div>
+  </div>
+</div>
+
+</main>
+<script>
+// ── 核心：所有飞书API请求通过Vercel代理转发 ──
+// 部署后把 PROXY_BASE 改成你的Vercel域名
+const PROXY_BASE = window.location.origin + '/api/proxy?url=';
+
+function proxyUrl(url) {
+  return PROXY_BASE + encodeURIComponent(url);
+}
+
+const S = {
+  token: null, tokenExp: 0,
+  docContent: '', rawRows: [], headers: [], colMap: {},
+  knowledge: null, copies: []
+};
+
+function goStep(n) {
+  document.querySelectorAll('.sec').forEach(s => s.classList.remove('active'));
+  document.getElementById('step-' + n).classList.add('active');
+  document.querySelectorAll('.sp').forEach((p, i) => {
+    p.classList.remove('active', 'done');
+    if (i + 1 === n) p.classList.add('active');
+    else if (i + 1 < n) p.classList.add('done');
+  });
+  window.scrollTo(0, 0);
+}
+function $(id) { return document.getElementById(id) }
+function setStatus(id, html, type = 'ai') { const el = $(id); if (!el) return; el.innerHTML = html ? `<div class="alert ${type}">${html}</div>` : ''; }
+function log(id, msg) { const el = $(id); if (!el) return; el.innerHTML += msg + '<br>'; el.scrollTop = el.scrollHeight; }
+function setBar(id, pct) { const el = $(id); if (el) el.style.width = pct + '%'; }
+function showPw(id) { const el = $(id); if (el) el.style.display = 'block'; }
+async function copyEl(id, btn) {
+  await navigator.clipboard.writeText($(id)?.innerText || '').catch(() => {});
+  if (btn) { btn.textContent = '已复制 ✓'; btn.classList.add('copied'); setTimeout(() => { btn.textContent = '复制'; btn.classList.remove('copied'); }, 2000); }
+}
+function parseUrl(url) {
+  if (!url) return null;
+  let m = url.match(/\/sheets\/([A-Za-z0-9]+)/); if (m) return { type: 'sheets', token: m[1] };
+  m = url.match(/\/base\/([A-Za-z0-9]+)/); if (m) { const tm = url.match(/[?&]table=([A-Za-z0-9]+)/); return { type: 'bitable', appToken: m[1], tableId: tm ? tm[1] : null }; }
+  return null;
+}
+
+// ── 飞书Token（走代理）──
+async function getToken() {
+  if (S.token && Date.now() < S.tokenExp) return S.token;
+  const res = await fetch(proxyUrl('https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal'), {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ app_id: $('appId').value.trim(), app_secret: $('appSecret').value.trim() })
+  });
+  const d = await res.json();
+  if (d.code !== 0) throw new Error('飞书Token获取失败：' + (d.msg || '请检查App ID和App Secret'));
+  S.token = d.tenant_access_token; S.tokenExp = Date.now() + (d.expire - 60) * 1000;
+  return S.token;
+}
+
+// ── 代理请求封装 ──
+async function feishuGet(url, token) {
+  const res = await fetch(proxyUrl(url), { headers: { 'Authorization': 'Bearer ' + token } });
+  return res.json();
+}
+async function feishuPost(url, token, body) {
+  const res = await fetch(proxyUrl(url), {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  return res.json();
+}
+
+// ── Step1 ──
+async function step1Next() {
+  const appId = $('appId').value.trim(), appSecret = $('appSecret').value.trim(), sheetUrl = $('sheetUrl').value.trim();
+  if (!appId || !appSecret) return setStatus('s1-status', '请填写 App ID 和 App Secret', 'ae');
+  if (!sheetUrl) return setStatus('s1-status', '请填写飞书电子表格链接', 'ae');
+  if (!parseUrl(sheetUrl) || parseUrl(sheetUrl).type !== 'sheets') return setStatus('s1-status', '链接格式不正确，请粘贴飞书电子表格（sheets）的链接', 'ae');
+  setStatus('s1-status', '<span class="spin spin-d"></span> 验证中...', 'ai');
+  try { await getToken(); setStatus('s1-status', '✓ 配置验证通过', 'as'); setTimeout(() => goStep(2), 700); }
+  catch (e) { setStatus('s1-status', '❌ ' + e.message, 'ae'); }
+}
+
+// ── Step2 读取表格 ──
+async function fetchSheet() {
+  $('btn-fetch').disabled = true;
+  showPw('fetch-pw'); setBar('fetch-pb', 10);
+  log('fetch-log', '正在获取飞书Token...');
+  try {
+    const token = await getToken();
+    log('fetch-log', '✓ Token获取成功'); setBar('fetch-pb', 30);
+    const sheetToken = parseUrl($('sheetUrl').value.trim()).token;
+
+    log('fetch-log', '正在获取工作表信息...');
+    const metaData = await feishuGet(`https://open.feishu.cn/open-apis/sheets/v3/spreadsheets/${sheetToken}/sheets/query`, token);
+    if (metaData.code !== 0) throw new Error('获取工作表失败：' + metaData.msg);
+
+    const sheets = metaData.data?.sheets || [];
+    if (!sheets.length) throw new Error('未找到任何工作表');
+    const targetName = $('sheetName').value.trim();
+    const targetSheet = (targetName ? sheets.find(s => s.title === targetName) : null) || sheets[0];
+    log('fetch-log', `✓ 使用工作表：${targetSheet.title}`);
+    setBar('fetch-pb', 50);
+
+    log('fetch-log', '正在读取表格数据...');
+    const range = `${targetSheet.sheet_id}!A1:Z500`;
+    const dataJson = await feishuGet(`https://open.feishu.cn/open-apis/sheets/v2/spreadsheets/${sheetToken}/values/${encodeURIComponent(range)}`, token);
+    if (dataJson.code !== 0) throw new Error('读取表格数据失败：' + dataJson.msg);
+
+    const values = dataJson.data?.valueRange?.values || [];
+    if (values.length < 2) throw new Error('表格数据为空或只有表头');
+
+    S.headers = (values[0] || []).map(h => String(h || '').trim());
+    S.rawRows = values.slice(1).filter(row => row && row.some(c => c !== null && c !== ''));
+    log('fetch-log', `✓ 读取到 ${S.rawRows.length} 行有效数据`);
+    setBar('fetch-pb', 90);
+
+    renderColMapUI(S.headers);
+    $('col-map-card').style.display = 'block';
+    setBar('fetch-pb', 100);
+    setStatus('s2-status', `✓ 读取成功，共 ${S.rawRows.length} 行，请确认字段映射`, 'as');
+  } catch (e) { setStatus('s2-status', '❌ ' + e.message, 'ae'); }
+  finally { $('btn-fetch').disabled = false; }
+}
+
+function renderColMapUI(headers) {
+  function guess(kws) { for (const k of kws) { const i = headers.findIndex(h => h.includes(k)); if (i >= 0) return i; } return -1; }
+  const fields = [
+    { key: 'title',   label: '标题列',   kws: ['标题', 'title'] },
+    { key: 'body',    label: '正文列',   kws: ['文案', '正文', '内容'] },
+    { key: 'product', label: '产品名称', kws: ['产品', '商品', '品名'] },
+    { key: 'likes',   label: '互动数据', kws: ['点赞', 'GMV', '互动'] },
+    { key: 'type',    label: '笔记类型', kws: ['类型', '笔记类型'] },
+  ];
+  const options = ['（不使用）', ...headers.map((h, i) => `${colLetter(i)}: ${h || '列'+(i+1)}`)];
+  $('col-map-wrap').innerHTML = fields.map(f => {
+    const g = guess(f.kws);
+    const sel = options.map((o, i) => { const v = i === 0 ? -1 : i - 1; return `<option value="${v}" ${v === g ? 'selected' : ''}>${o}</option>`; }).join('');
+    return `<div class="col-map-label">${f.label}</div><select id="col-${f.key}" style="padding:6px 10px;font-size:12px;border:1px solid var(--border);border-radius:6px;background:var(--cream);color:var(--ink);outline:none">${sel}</select>`;
+  }).join('');
+}
+function colLetter(i) { return i < 26 ? String.fromCharCode(65+i) : String.fromCharCode(64+Math.floor(i/26))+String.fromCharCode(65+(i%26)); }
+
+function confirmColMap() {
+  S.colMap = { title: parseInt($('col-title')?.value??-1), body: parseInt($('col-body')?.value??-1), product: parseInt($('col-product')?.value??-1), likes: parseInt($('col-likes')?.value??-1), type: parseInt($('col-type')?.value??-1) };
+  if (S.colMap.body < 0) return setStatus('col-map-status', '请至少选择「正文列」', 'ae');
+  const lines = [];
+  S.rawRows.forEach((row, i) => {
+    const parts = [];
+    if (S.colMap.product >= 0 && row[S.colMap.product]) parts.push(`【产品】${row[S.colMap.product]}`);
+    if (S.colMap.title >= 0 && row[S.colMap.title]) parts.push(`【标题】${row[S.colMap.title]}`);
+    if (S.colMap.body >= 0 && row[S.colMap.body]) parts.push(`【正文】${row[S.colMap.body]}`);
+    if (parts.length) lines.push(`--- 第${i+1}篇 ---\n${parts.join('\n')}`);
+  });
+  S.docContent = lines.join('\n\n');
+  const usedCols = Object.values(S.colMap).filter(v => v >= 0);
+  let html = '<thead><tr>' + usedCols.map(i => `<th>${S.headers[i]||'列'+(i+1)}</th>`).join('') + '</tr></thead><tbody>';
+  S.rawRows.slice(0, 5).forEach(row => { html += '<tr>' + usedCols.map(i => { const v = String(row[i]||'').slice(0,60); return `<td title="${String(row[i]||'')}">${v}${String(row[i]||'').length>60?'...':''}</td>`; }).join('') + '</tr>'; });
+  $('preview-table').innerHTML = html + '</tbody>';
+  $('row-count').textContent = `共 ${S.rawRows.length} 行`;
+  $('col-count').textContent = `已映射 ${usedCols.length} 个字段`;
+  $('data-preview-card').style.display = 'block';
+  setStatus('col-map-status', `✓ 已提取 ${lines.length} 篇文案`, 'as');
+}
+
+// ── Claude API ──
+async function callClaude(sys, user) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 4000, system: sys, messages: [{ role: 'user', content: user }] })
+  });
+  const d = await res.json();
+  if (d.error) throw new Error('Claude API错误：' + d.error.message);
+  return d.content?.map(b => b.text || '').join('') || '';
+}
+
+// ── Step3 分析 ──
+async function analyzeDoc() {
+  if (!S.docContent) return setStatus('s3-status', '请先完成第二步的表格读取', 'ae');
+  $('btn-analyze').disabled = true; showPw('analyze-pw'); setBar('analyze-pb', 10);
+  log('analyze-log', '正在准备分析素材...');
+  try {
+    const cat = $('catHint').value.trim();
+    setBar('analyze-pb', 30); log('analyze-log', '正在调用Claude AI深度分析...');
+    const sys = `你是专精小红书食品零食带货赛道的资深文案策略师，擅长从爆款文案中提炼可复用的写作规律。分析要客观、实用、可操作。输出必须是严格的JSON格式，不输出任何其他内容。`;
+    const usr = `请深度分析以下小红书爆款带货文案库${cat?`（品类：${cat}）`:''}，提炼写作核心规律。\n\n【文案库内容】\n${S.docContent.slice(0,14000)}\n\n请以如下JSON格式输出（直接输出JSON，不加任何标记）：\n{"hook_patterns":{"title":"开头钩子句型","items":["句型1：说明+示例","句型2：说明+示例","句型3：说明+示例"]},"structure_template":{"title":"正文结构模板","items":["结构要素1","结构要素2","结构要素3","结构要素4"]},"emotion_words":{"title":"高频情绪词/爆款词","items":["词1","词2","词3","词4","词5","词6","词7","词8"]},"selling_angles":{"title":"带货切入角度","items":["角度1：说明","角度2：说明","角度3：说明"]},"cta_patterns":{"title":"行动召唤套路","items":["套路1","套路2","套路3"]},"title_formula":{"title":"标题公式","items":["公式1：示例","公式2：示例","公式3：示例"]},"full_report":"500字以内综合分析报告"}`;
+    const result = await callClaude(sys, usr);
+    setBar('analyze-pb', 80); log('analyze-log', '✓ AI分析完成，正在解析...');
+    let parsed; try { parsed = JSON.parse(result.trim()); } catch { const m = result.match(/\{[\s\S]*\}/); if (m) parsed = JSON.parse(m[0]); else throw new Error('AI返回格式异常，请重试'); }
+    S.knowledge = parsed;
+    $('kg-grid').innerHTML = ['hook_patterns','structure_template','emotion_words','selling_angles','cta_patterns','title_formula'].map(k => { const v = parsed[k]; if (!v) return ''; return `<div class="kc"><div class="kc-l">${v.title}</div><div class="kc-c">${(v.items||[]).map(i=>`• ${i}`).join('<br>')}</div></div>`; }).join('');
+    $('full-report').textContent = parsed.full_report || result;
+    $('knowledge-result').style.display = 'block';
+    setBar('analyze-pb', 100); setStatus('s3-status', '✓ 分析完成！可写入飞书或直接去写文案', 'as');
+  } catch (e) { setStatus('s3-status', '❌ ' + e.message, 'ae'); }
+  finally { $('btn-analyze').disabled = false; }
+}
+
+async function saveKnowledge() {
+  if (!S.knowledge) return;
+  $('btn-save-k').disabled = true;
+  const el = $('k-save-status'); el.style.display = 'flex'; el.className = 'alert ai'; el.innerHTML = '<span class="spin spin-d"></span> 写入中...';
+  try {
+    const token = await getToken();
+    const { appToken, tableId } = await ensureTable(token, 'knowledge');
+    const today = new Date().toLocaleDateString('zh-CN'), d = S.knowledge;
+    const records = [
+      { fields: { '分析维度': '开头钩子句型', '内容': (d.hook_patterns?.items||[]).join('\n'), '更新时间': today } },
+      { fields: { '分析维度': '正文结构模板', '内容': (d.structure_template?.items||[]).join('\n'), '更新时间': today } },
+      { fields: { '分析维度': '高频情绪词',   '内容': (d.emotion_words?.items||[]).join(' / '), '更新时间': today } },
+      { fields: { '分析维度': '带货切入角度', '内容': (d.selling_angles?.items||[]).join('\n'), '更新时间': today } },
+      { fields: { '分析维度': '行动召唤套路', '内容': (d.cta_patterns?.items||[]).join('\n'), '更新时间': today } },
+      { fields: { '分析维度': '标题公式',     '内容': (d.title_formula?.items||[]).join('\n'), '更新时间': today } },
+      { fields: { '分析维度': '综合分析报告', '内容': d.full_report||'', '更新时间': today } },
+    ];
+    await batchWrite(token, appToken, tableId, records);
+    el.className = 'alert as'; el.innerHTML = `✓ 已写入飞书知识点表格（${records.length}条）`;
+  } catch (e) { el.className = 'alert ae'; el.innerHTML = '❌ ' + e.message; }
+  finally { $('btn-save-k').disabled = false; }
+}
+
+// ── Step4 生成 ──
+async function generateCopy() {
+  const name = $('prodName').value.trim(), sell = $('prodSell').value.trim();
+  if (!name) return setStatus('s4-status', '请填写产品名称', 'ae');
+  if (!sell) return setStatus('s4-status', '请填写核心卖点', 'ae');
+  $('btn-gen').disabled = true; showPw('gen-pw'); setBar('gen-pb', 10);
+  log('gen-log', '正在组织写作指令...');
+  try {
+    const audience = $('audience').value.trim() || '18-28岁年轻女性', style = $('copyStyle').value, count = parseInt($('copyCount').value);
+    let kCtx = '';
+    if (S.knowledge) { const d = S.knowledge; kCtx = `\n\n【爆款写作规律参考】\n开头钩子：${(d.hook_patterns?.items||[]).join('；')}\n标题公式：${(d.title_formula?.items||[]).join('；')}\n情绪词：${(d.emotion_words?.items||[]).join('、')}\n切入角度：${(d.selling_angles?.items||[]).join('；')}\n行动召唤：${(d.cta_patterns?.items||[]).join('；')}`; }
+    setBar('gen-pb', 30); log('gen-log', '正在调用Claude生成文案...');
+    const sys = `你是小红书头部食品零食带货博主，写作风格真实自然、接地气，善用情绪化语言触动读者。写出的文案完全符合小红书调性，有种草感，不像广告。`;
+    const usr = `请为以下产品写${count}篇小红书爆款带货笔记。\n\n【产品信息】\n产品名称：${name}\n核心卖点：${sell}\n目标人群：${audience}\n文案风格：${style}${kCtx}\n\n要求：\n1. 每篇包含：标题（含emoji，25字以内）、正文（300-500字，自然分段）、话题标签（8-10个）\n2. 标题有钩子感\n3. 正文第一句用问题/痛点/数字/反差开头\n4. 语气像真实用户分享\n5. 结尾有CTA\n${count>1?`6. ${count}篇要有明显差异化`:''}\n\n严格按以下JSON格式输出：\n{"copies":[{"index":1,"style":"风格标签","title":"标题","body":"正文","tags":["话题1","话题2"],"photo_guide":"拍摄建议"}]}`;
+    const result = await callClaude(sys, usr);
+    setBar('gen-pb', 80); log('gen-log', '✓ 文案生成完成...');
+    let parsed; try { parsed = JSON.parse(result.trim()); } catch { const m = result.match(/\{[\s\S]*\}/); if (m) parsed = JSON.parse(m[0]); else throw new Error('AI返回格式异常，请重试'); }
+    S.copies = parsed.copies || [];
+    $('copy-cards').innerHTML = S.copies.map((c, i) => `
+      <div class="card" style="margin-bottom:16px">
+        <div class="ct"><span class="cn cn-red">${c.index}</span><span>${c.style||'文案'+c.index}</span><button class="cb" style="margin-left:auto" onclick="copyCopy(${i},this)">复制全文</button></div>
+        <div style="background:var(--red2);border-radius:6px;padding:12px 16px;margin-bottom:12px">
+          <div style="font-size:10px;font-family:'DM Mono',monospace;color:var(--ink3);margin-bottom:4px">标题</div>
+          <div style="font-size:15px;font-weight:600;color:var(--ink)">${c.title}</div>
+        </div>
+        <div style="font-size:13px;color:var(--ink2);white-space:pre-wrap;line-height:1.9;margin-bottom:12px">${c.body}</div>
+        <div style="margin-bottom:10px">${(c.tags||[]).map(t=>`<span class="tag tr" style="margin:2px 2px 2px 0">#${t}</span>`).join('')}</div>
+        <div style="background:var(--cream2);border-radius:6px;padding:10px 14px;font-size:12px;color:var(--ink3)">
+          <span style="font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;display:block;margin-bottom:3px">📷 拍摄建议</span>${c.photo_guide}
+        </div>
+      </div>`).join('');
+    $('copy-results').style.display = 'block';
+    setBar('gen-pb', 100); setStatus('s4-status', `✓ 已生成 ${S.copies.length} 篇文案`, 'as');
+  } catch (e) { setStatus('s4-status', '❌ ' + e.message, 'ae'); }
+  finally { $('btn-gen').disabled = false; }
+}
+
+function copyCopy(i, btn) {
+  const c = S.copies[i]; if (!c) return;
+  navigator.clipboard.writeText(`${c.title}\n\n${c.body}\n\n${(c.tags||[]).map(t=>'#'+t).join(' ')}`).catch(()=>{});
+  btn.textContent = '已复制 ✓'; btn.classList.add('copied'); setTimeout(() => { btn.textContent = '复制全文'; btn.classList.remove('copied'); }, 2000);
+}
+
+async function saveCopy() {
+  if (!S.copies.length) return;
+  $('btn-save-c').disabled = true;
+  const el = $('c-save-status'); el.style.display = 'flex'; el.className = 'alert ai'; el.innerHTML = '<span class="spin spin-d"></span> 写入中...';
+  try {
+    const token = await getToken();
+    const { appToken, tableId } = await ensureTable(token, 'copy');
+    const name = $('prodName').value.trim(), today = new Date().toLocaleDateString('zh-CN');
+    const records = S.copies.map(c => ({ fields: { '产品名称': name, '文案标题': c.title, '正文内容': c.body, '话题标签': (c.tags||[]).map(t=>'#'+t).join(' '), '拍摄建议': c.photo_guide||'', '文案风格': c.style||'', '生成日期': today, '状态': '待审核' } }));
+    await batchWrite(token, appToken, tableId, records);
+    el.className = 'alert as'; el.innerHTML = `✓ 已写入飞书文案表格（${records.length}篇）`;
+  } catch (e) { el.className = 'alert ae'; el.innerHTML = '❌ ' + e.message; }
+  finally { $('btn-save-c').disabled = false; }
+}
+
+// ── 飞书多维表格工具 ──
+async function ensureTable(token, type) {
+  const key = type === 'knowledge' ? 'knowledgeTableUrl' : 'copyTableUrl';
+  const url = $(key).value.trim();
+  if (url) { const p = parseUrl(url); if (p?.type === 'bitable' && p.tableId) return { appToken: p.appToken, tableId: p.tableId }; if (p?.type === 'bitable') { const tid = await getOrCreate(token, p.appToken, type); return { appToken: p.appToken, tableId: tid }; } }
+  return createBitable(token, type);
+}
+async function getOrCreate(token, appToken, type) {
+  const name = type === 'knowledge' ? '写作知识点库' : '生成文案库';
+  const d = await feishuGet(`https://open.feishu.cn/open-apis/bitable/v1/apps/${appToken}/tables`, token);
+  if (d.code !== 0) throw new Error('获取表格列表失败：' + d.msg);
+  const ex = (d.data?.items||[]).find(t => t.name === name); if (ex) return ex.table_id;
+  return createTable(token, appToken, type);
+}
+async function createBitable(token, type) {
+  const appName = type === 'knowledge' ? '小红书写作知识点库' : '小红书生成文案库';
+  const d = await feishuPost('https://open.feishu.cn/open-apis/bitable/v1/apps', token, { name: appName });
+  if (d.code !== 0) throw new Error('创建多维表格失败：' + d.msg);
+  const appToken = d.data?.app?.app_token; if (!appToken) throw new Error('创建失败：未获取到app_token');
+  const info = $('created-info'); info.style.display = 'flex'; info.innerHTML += `✓ 已自动创建多维表格「${appName}」<br>`;
+  const tableId = await createTable(token, appToken, type);
+  return { appToken, tableId };
+}
+async function createTable(token, appToken, type) {
+  const isK = type === 'knowledge';
+  const fields = isK ? [{ field_name: '分析维度', type: 1 }, { field_name: '内容', type: 1 }, { field_name: '更新时间', type: 1 }]
+    : [{ field_name: '产品名称', type: 1 }, { field_name: '文案标题', type: 1 }, { field_name: '正文内容', type: 1 }, { field_name: '话题标签', type: 1 }, { field_name: '拍摄建议', type: 1 }, { field_name: '文案风格', type: 1 }, { field_name: '生成日期', type: 1 }, { field_name: '状态', type: 1 }];
+  const d = await feishuPost(`https://open.feishu.cn/open-apis/bitable/v1/apps/${appToken}/tables`, token, { table: { name: isK ? '写作知识点库' : '生成文案库', default_view_name: '默认视图', fields } });
+  if (d.code !== 0) throw new Error('创建数据表失败：' + d.msg);
+  return d.data?.table_id;
+}
+async function batchWrite(token, appToken, tableId, records) {
+  for (let i = 0; i < records.length; i += 100) {
+    const d = await feishuPost(`https://open.feishu.cn/open-apis/bitable/v1/apps/${appToken}/tables/${tableId}/records/batch_create`, token, { records: records.slice(i, i+100) });
+    if (d.code !== 0) throw new Error('写入记录失败：' + d.msg);
+    await new Promise(r => setTimeout(r, 300));
+  }
+}
+</script>
+</body>
+</html>
