@@ -352,8 +352,24 @@ async function fetchSheet() {
     const values = dataJson.data?.valueRange?.values || [];
     if (values.length < 2) throw new Error('表格数据为空或只有表头');
 
-    S.headers = (values[0] || []).map(h => String(h || '').trim());
-    S.rawRows = values.slice(1).filter(row => row && row.some(c => c !== null && c !== ''));
+// 提取单元格纯文本（兼容富文本格式）
+function extractText(cell) {
+  if (cell === null || cell === undefined) return '';
+  if (typeof cell === 'string') return cell.trim();
+  if (typeof cell === 'number') return String(cell);
+  // 飞书富文本格式：{type: 'text', text: '...'}
+  if (typeof cell === 'object') {
+    if (cell.text) return String(cell.text).trim();
+    if (cell.value) return String(cell.value).trim();
+    if (Array.isArray(cell)) return cell.map(extractText).join('');
+    // 富文本数组
+    if (cell.type === 'text') return String(cell.text || '').trim();
+  }
+  return String(cell).trim();
+}
+
+S.headers = (values[0] || []).map(h => extractText(h));
+S.rawRows = values.slice(1).filter(row => row && row.some(c => c !== null && c !== ''));
     log('fetch-log', `✓ 读取到 ${S.rawRows.length} 行有效数据`);
     setBar('fetch-pb', 90);
 
