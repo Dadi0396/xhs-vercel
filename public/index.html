@@ -423,9 +423,20 @@ if (S.colMap.body >= 0 && row[S.colMap.body]) parts.push(`【正文】${extractT
 
 // ── Claude API ──
 async function callClaude(sys, user) {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 4000, system: sys, messages: [{ role: 'user', content: user }] })
+  const CLAUDE_API_KEY = 'sk-ant-xxxxxx'; // 换成你的Claude API Key
+  const res = await fetch(proxyUrl('https://api.anthropic.com/v1/messages'), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': CLAUDE_API_KEY,
+      'anthropic-version': '2023-06-01'
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 4000,
+      system: sys,
+      messages: [{ role: 'user', content: user }]
+    })
   });
   const d = await res.json();
   if (d.error) throw new Error('Claude API错误：' + d.error.message);
