@@ -1,4 +1,4 @@
-// Vercel Serverless Function - 混合代理 (支持飞书 + Gemini)
+// Vercel Serverless Function - 混合代理 (支持飞书 + 通义千问)
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -11,11 +11,11 @@ export default async function handler(req, res) {
 
   const decodedUrl = decodeURIComponent(url);
 
-  // 1. 验证域名权限
+  // 1. 验证域名权限：允许飞书和通义千问(阿里云 DashScope)
   const isFeishu = decodedUrl.startsWith('https://open.feishu.cn') || decodedUrl.startsWith('https://open.larksuite.com');
-  const isGemini = decodedUrl.startsWith('https://generativelanguage.googleapis.com');
+  const isQwen = decodedUrl.startsWith('https://dashscope.aliyuncs.com');
 
-  if (!isFeishu && !isGemini) {
+  if (!isFeishu && !isQwen) {
     return res.status(403).json({ error: '安全拦截：不允许代理该域名（' + decodedUrl + '）' });
   }
 
@@ -27,9 +27,9 @@ export default async function handler(req, res) {
 
     if (isFeishu) {
       if (req.headers.authorization) fetchOptions.headers['Authorization'] = req.headers.authorization;
-    } else if (isGemini) {
-      // 自动注入 Vercel 环境变量里的 Gemini API Key
-      fetchOptions.headers['x-goog-api-key'] = process.env.GEMINI_API_KEY; 
+    } else if (isQwen) {
+      // 自动注入 Vercel 环境变量里的通义千问 API Key
+      fetchOptions.headers['Authorization'] = `Bearer ${process.env.QWEN_API_KEY}`; 
     }
 
     if (req.method !== 'GET' && req.body) fetchOptions.body = JSON.stringify(req.body);
