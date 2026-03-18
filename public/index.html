@@ -330,7 +330,7 @@ async function analyzeDoc() {
   $('k-save-status').innerHTML = ''; 
   
   try {
-    const res = await callQwen("你是小红书专家，分析规律。注意：必须严格输出JSON！", `素材：\n${S.docContent.slice(0,8000)}\n\n输出JSON：\n{"hook_patterns":{"title":"开头钩子","items":["点1"]},"structure_template":{"title":"结构模板","items":["点1"]},"emotion_words":{"title":"爆款词","items":["点1"]},"selling_angles":{"title":"切入角度","items":["点1"]},"cta_patterns":{"title":"引导套路","items":["点1"]},"title_formula":{"title":"标题公式","items":["点1"]},"full_report":"分析报告"}`);
+    const res = await callQwen("你是小红书专家，善于分析文案规律。注意：必须严格输出JSON！", `素材：\n${S.docContent.slice(0,8000)}\n\n输出JSON：\n{"hook_patterns":{"title":"开头钩子","items":["点1"]},"structure_template":{"title":"结构模板","items":["点1"]},"emotion_words":{"title":"爆款词","items":["点1"]},"selling_angles":{"title":"切入角度","items":["点1"]},"cta_patterns":{"title":"引导套路","items":["点1"]},"title_formula":{"title":"标题公式","items":["点1"]},"full_report":"分析报告"}`);
     const p = JSON.parse(res); S.knowledge = p;
     $('kg-grid').innerHTML = Object.keys(p).filter(k=>k!=='full_report').map(k=>`<div class="kc"><div class="kc-l">${p[k].title}</div><div class="kc-c">${(p[k].items||[]).join('<br>')}</div></div>`).join('');
     $('full-report').textContent = p.full_report; $('knowledge-result').style.display = 'block';
@@ -349,16 +349,17 @@ async function generateCopy() {
   $('c-save-status').innerHTML = ''; 
 
   try {
-    // ── 核心排版指令强化 ──
-    const sysPrompt = "你是顶尖小红书爆款写手。必须严格遵守字数、换行排版规则，严格输出JSON格式。";
-    const userPrompt = `产品：${$('prodName').value}\n卖点：${$('prodSell').value}\n参考：${JSON.stringify(S.knowledge)}\n\n要求：
-1. 请一共生成 ${count} 个不同风格的版本。
-2. 【标题强制要求】：小红书标题字数严格限制在20个字符以内（含标点和表情），越短越好！
-3. 【正文排版强制要求】（极其重要）：小红书手机端每行最多显示23个字。为了完美的视觉体验，正文（body）必须频繁换行！请确保正文的**每一行绝对不超过23个字符**（包含标点和表情）。写到18-22个字就必须强制加一个换行符（\\n）。
-4. 【视觉节奏】：多用短句，善用表情符号（Emoji），段落之间要有空行留白，绝对不能出现大段密集的文字。
+    // ── 核心逻辑升级：让 AI 以学习模仿为主，自然兼顾排版 ──
+    const sysPrompt = "你是顶尖的小红书爆款文案操盘手，擅长深度学习参考爆款的网感、情绪与节奏。请始终以高质量、有真诚分享感的文案为核心，最后兼顾美观的排版。必须严格输出JSON格式。";
+    
+    const userPrompt = `产品：${$('prodName').value}\n卖点：${$('prodSell').value}\n参考库经验：${JSON.stringify(S.knowledge)}\n\n要求：
+1. 生成 ${count} 个不同风格的版本。
+2. 【标题红线】：标题严格限制在20个字符以内（含标点和表情），绝不能超字数！
+3. 【核心内容与网感】：深度模仿参考库中的爆款规律（情绪词、切入角度、真实场景）。文案必须血肉丰满，融入真实的痛点场景与生动的感官细节，确保文案具备极强的种草力和真诚的分享感，杜绝干瘪枯燥的口号堆砌。整体字数保持在150字以上。
+4. 【排版与美化】：在保证高质量文案的基础上，进行小红书专属的视觉排版优化。多用短句，单行字数尽量控制在23字以内以适配手机屏幕（顺其自然按句意换行即可，切勿生硬截断句意！），善用Emoji进行视觉点缀，段落之间留出空行保持呼吸感。
 5. 必须输出严格的JSON。
 
-输出JSON：{"copies":[{"index":1,"style":"风格","title":"小于20字的短标题","body":"严格控制行字数、频繁换行的正文"}]}`;
+输出JSON：{"copies":[{"index":1,"style":"风格","title":"严格小于20字的吸睛标题","body":"内容饱满生动、排版顺畅自然的正文"}]}`;
     
     const res = await callQwen(sysPrompt, userPrompt);
     const p = JSON.parse(res); S.copies = p.copies || p;
