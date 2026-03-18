@@ -1,4 +1,4 @@
-// Vercel Serverless Function - 混合代理 (飞书 + Gemini)
+// Vercel Serverless Function - 混合代理 (支持飞书 + Gemini)
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -11,12 +11,12 @@ export default async function handler(req, res) {
 
   const decodedUrl = decodeURIComponent(url);
 
-  // 1. 验证域名
+  // 1. 验证域名权限
   const isFeishu = decodedUrl.startsWith('https://open.feishu.cn') || decodedUrl.startsWith('https://open.larksuite.com');
   const isGemini = decodedUrl.startsWith('https://generativelanguage.googleapis.com');
 
   if (!isFeishu && !isGemini) {
-    return res.status(403).json({ error: '不允许请求该域名' });
+    return res.status(403).json({ error: '安全拦截：不允许代理该域名（' + decodedUrl + '）' });
   }
 
   try {
@@ -28,7 +28,7 @@ export default async function handler(req, res) {
     if (isFeishu) {
       if (req.headers.authorization) fetchOptions.headers['Authorization'] = req.headers.authorization;
     } else if (isGemini) {
-      // 注入 Gemini API Key
+      // 自动注入 Vercel 环境变量里的 Gemini API Key
       fetchOptions.headers['x-goog-api-key'] = process.env.GEMINI_API_KEY; 
     }
 
@@ -38,6 +38,6 @@ export default async function handler(req, res) {
     const data = await response.json();
     return res.status(response.status).json(data);
   } catch (error) {
-    return res.status(500).json({ error: '代理失败: ' + error.message });
+    return res.status(500).json({ error: '代理中转失败: ' + error.message });
   }
 }
