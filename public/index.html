@@ -274,6 +274,21 @@ function setStatus(id, html, type = 'ai') { const el = $(id); if (!el) return; e
 function log(id, msg) { const el = $(id); if (!el) return; el.innerHTML += msg + '<br>'; el.scrollTop = el.scrollHeight; }
 function setBar(id, pct) { const el = $(id); if (el) el.style.width = pct + '%'; }
 function showPw(id) { const el = $(id); if (el) el.style.display = 'block'; }
+function extractText(cellValue) {
+    if (cellValue === null || cellValue === undefined) return "";
+    if (typeof cellValue === "string") return cellValue;
+    if (typeof cellValue === "number") return String(cellValue);
+    if (Array.isArray(cellValue)) {
+        return cellValue.map(item => {
+            if (typeof item === 'string') return item;
+            return item.text || item.name || item.full_name || "";
+        }).join("");
+    }
+    if (typeof cellValue === 'object') {
+        return cellValue.text || cellValue.name || "";
+    }
+    return String(cellValue);
+}
 async function copyEl(id, btn) {
   await navigator.clipboard.writeText($(id)?.innerText || '').catch(() => {});
   if (btn) { btn.textContent = '已复制 ✓'; btn.classList.add('copied'); setTimeout(() => { btn.textContent = '复制'; btn.classList.remove('copied'); }, 2000); }
