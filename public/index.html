@@ -212,21 +212,44 @@ function extractText(cell) {
 
 function parseUrl(url) {
   if (!url) return null;
-  let m = url.match(/\/sheets\/([A-Za-z0-9]+)/); if (m) return { type: 'sheets', token: m[1] };
-  m = url.match(/\/base\/([A-Za-z0-9]+)/); if (m) { const tm = url.match(/[?&]table=([A-Za-z0-9]+)/); return { type: 'bitable', appToken: m[1], tableId: tm ? tm[1] : null }; }
+  // 解析电子表格 (Sheets)
+  let m = url.match(/\/sheets\/([A-Za-z0-9]+)/); 
+  if (m) return { type: 'sheets', token: m[1] };
+  
+  // 解析多维表格 (Bitable)
+  m = url.match(/\/base\/([A-Za-z0-9]+)/); 
+  if (m) { 
+    const tm = url.match(/[?&]table=([A-Za-z0-9]+)/); 
+    return { type: 'bitable', appToken: m[1], tableId: tm ? tm[1] : null }; 
+  }
   return null;
 }
 
-async function getToken() {
-  if (S.token && Date.now() < S.tokenExp) return S.token;
-  const res = await fetch(proxyUrl('https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal'), {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ app_id: $('appId').value.trim(), app_secret: $('appSecret').value.trim() })
-  });
-  const d = await res.json();
-  if (d.code !== 0) throw new Error('授权失败: ' + d.msg);
-  S.token = d.tenant_access_token; S.tokenExp = Date.now() + (d.expire - 60) * 1000;
-  return S.token;
+async function ensureTable(token, type) {
+  const url = (type === 'knowledge' ? $('knowledgeTableUrl') : $('copyTableUrl')).value.trim();
+  if (!url) throw new Error("缺少表格链接，请返回第一步填写！");
+  
+  const p = parseUrl(url); 
+  if (!p || !p.appToken) {
+    throw new Error("链接格式错误：必须包含 /base/。\n如果是知识库(wiki)链接，请在表格右上角点击「•••」->「在独立窗口打开」，然后再复制新网址！");
+  }
+
+  let tableId = p.tableId;
+  
+  // 增强逻辑：如果网址里没有 table=xxx，自动去飞书获取第一个表
+  if (!tableId) {
+    const res = await fetch(proxyUrl(`https://open.feishu.cn/open-apis/bitable/v1/apps/${p.appToken}/tables`), {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    const d = await res.json();
+    if (d.code === 0 && d.data && d.data.items && d.data.items.length > 0) {
+      tableId = d.data.items[0].table_id;
+    } else {
+      throw new Error("无法读取该多维表格！\n请检查：你是否已将「应用机器人」添加为该表格的协作者？");
+    }
+  }
+
+  return { appToken: p.appToken, tableId: tableId };
 }
 
 // --- 核心修改：调用阿里云通义千问 (DashScope API) ---
