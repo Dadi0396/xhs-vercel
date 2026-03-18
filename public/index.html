@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>小红书爆款文案工作台 - 通义千问智能版</title>
+<title>小红书爆款文案工作台 - 自动化版</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600&family=DM+Mono:wght@400;500&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -26,8 +26,8 @@ body{font-family:'Noto Serif SC',serif;background:var(--cream);color:var(--ink);
 .cn-green{background:var(--green);color:#fff}
 .fr{margin-bottom:16px}
 label{display:block;font-size:12px;font-family:'DM Mono',monospace;color:var(--ink2);margin-bottom:6px;letter-spacing:.03em}
-input[type=text],input[type=password],textarea,select{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:6px;font-size:14px;font-family:'Noto Serif SC',serif;color:var(--ink);background:var(--cream);transition:border-color .2s,box-shadow .2s;outline:none;resize:vertical}
-input[type=text]:focus,input[type=password]:focus,textarea:focus,select:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(217,48,37,.08);background:#fff}
+input[type=text],input[type=password],textarea,select,input[type=number]{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:6px;font-size:14px;font-family:'Noto Serif SC',serif;color:var(--ink);background:var(--cream);transition:border-color .2s,box-shadow .2s;outline:none;resize:vertical}
+input[type=text]:focus,input[type=password]:focus,textarea:focus,select:focus,input[type=number]:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(217,48,37,.08);background:#fff}
 input[type=password]{font-family:'DM Mono',monospace;font-size:13px;letter-spacing:.05em}
 .f2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:10px 22px;border-radius:6px;font-size:14px;font-family:'Noto Serif SC',serif;font-weight:600;cursor:pointer;border:none;transition:all .18s;white-space:nowrap}
@@ -145,18 +145,17 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:20px 0}
     </div>
     <div class="pw" id="analyze-pw" style="display:none"><div class="pb-bg"><div class="pb" id="analyze-pb"></div></div><div class="plog" id="analyze-log"></div></div>
     <div id="s3-status"></div>
+    <div id="k-save-status"></div>
   </div>
   <div id="knowledge-result" style="display:none">
     <div class="card">
-      <div class="ct"><span class="cn cn-green">✓</span>AI 总结的写作知识点</div>
+      <div class="ct"><span class="cn cn-green">✓</span>AI 总结的写作知识点 (已自动同步)</div>
       <div class="kg" id="kg-grid"></div>
       <hr class="dv">
       <div class="rb"><div class="rt" id="full-report"></div></div>
       <div class="br" style="margin-top:16px">
-        <button class="btn btn-gr" onclick="saveKnowledge()">写入飞书知识库</button>
         <button class="btn btn-p" onclick="goStep(4)">去写文案 →</button>
       </div>
-      <div id="k-save-status"></div>
     </div>
   </div>
 </div>
@@ -168,14 +167,14 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:20px 0}
       <div class="fr"><label>产品名称</label><input type="text" id="prodName" placeholder="输入产品名"></div>
       <div class="fr"><label>核心卖点</label><input type="text" id="prodSell" placeholder="输入卖点"></div>
     </div>
-    <div class="br"><button class="btn btn-p" id="btn-gen" onclick="generateCopy()">AI 生成</button></div>
+    <div class="fr" style="width: 50%;"><label>生成数量</label><input type="number" id="genCount" value="3" min="1" max="10"></div>
+    <div class="br"><button class="btn btn-p" id="btn-gen" onclick="generateCopy()">一键生成并同步飞书</button></div>
     <div class="pw" id="gen-pw" style="display:none"><div class="pb-bg"><div class="pb" id="gen-pb"></div></div></div>
     <div id="s4-status"></div>
+    <div id="c-save-status"></div>
   </div>
   <div id="copy-results" style="display:none">
     <div id="copy-cards"></div>
-    <div class="br" style="padding:0 24px"><button class="btn btn-gr" onclick="saveCopy()">同步至飞书</button></div>
-    <div id="c-save-status"></div>
   </div>
 </div>
 </main>
@@ -185,6 +184,14 @@ const PROXY_BASE = window.location.origin + '/api/proxy?url=';
 function proxyUrl(url) { return PROXY_BASE + encodeURIComponent(url); }
 const S = { token: null, tokenExp: 0, docContent: '', rawRows: [], headers: [], colMap: {}, knowledge: null, copies: [] };
 function $(id) { return document.getElementById(id); }
+
+window.onload = function() {
+  const fields = ['appId', 'appSecret', 'sheetUrl', 'sheetName', 'knowledgeTableUrl', 'copyTableUrl'];
+  fields.forEach(id => {
+    const val = localStorage.getItem('xhs_' + id);
+    if (val) $(id).value = val;
+  });
+};
 
 function goStep(n) {
   document.querySelectorAll('.sec').forEach(s => s.classList.remove('active'));
@@ -210,7 +217,6 @@ function extractText(cell) {
   return String(cell).trim();
 }
 
-// ── 核心修复 1：更智能的 URL 解析 ──
 function parseUrl(url) {
   if (!url) return null;
   let m = url.match(/\/sheets\/([A-Za-z0-9]+)/); 
@@ -224,7 +230,6 @@ function parseUrl(url) {
   return null;
 }
 
-// ── 重新找回的飞书授权 Token 函数 ──
 async function getToken() {
   if (S.token && Date.now() < S.tokenExp) return S.token;
   const res = await fetch(proxyUrl('https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal'), {
@@ -267,6 +272,10 @@ async function callQwen(sys, user) {
 async function step1Next() {
   const appId = $('appId').value.trim(), appSecret = $('appSecret').value.trim(), sheetUrl = $('sheetUrl').value.trim();
   if (!appId || !appSecret || !sheetUrl) return setStatus('s1-status', '请补全必填配置', 'ae');
+  
+  const fields = ['appId', 'appSecret', 'sheetUrl', 'sheetName', 'knowledgeTableUrl', 'copyTableUrl'];
+  fields.forEach(id => localStorage.setItem('xhs_' + id, $(id).value.trim()));
+
   setStatus('s1-status', '验证中...', 'ai');
   try { await getToken(); goStep(2); } catch (e) { setStatus('s1-status', '❌ ' + e.message, 'ae'); }
 }
@@ -316,59 +325,84 @@ function confirmColMap() {
 }
 
 async function analyzeDoc() {
-  $('btn-analyze').disabled = true; showPw('analyze-pw'); setBar('analyze-pb', 40); setStatus('s3-status', '通义千问 分析中...', 'ai');
+  $('btn-analyze').disabled = true; showPw('analyze-pw'); setBar('analyze-pb', 40); 
+  setStatus('s3-status', '通义千问 分析中...', 'ai');
+  $('k-save-status').innerHTML = ''; 
+  
   try {
     const res = await callQwen("你是小红书专家，分析规律。注意：必须严格输出JSON！", `素材：\n${S.docContent.slice(0,8000)}\n\n输出JSON：\n{"hook_patterns":{"title":"开头钩子","items":["点1"]},"structure_template":{"title":"结构模板","items":["点1"]},"emotion_words":{"title":"爆款词","items":["点1"]},"selling_angles":{"title":"切入角度","items":["点1"]},"cta_patterns":{"title":"引导套路","items":["点1"]},"title_formula":{"title":"标题公式","items":["点1"]},"full_report":"分析报告"}`);
     const p = JSON.parse(res); S.knowledge = p;
     $('kg-grid').innerHTML = Object.keys(p).filter(k=>k!=='full_report').map(k=>`<div class="kc"><div class="kc-l">${p[k].title}</div><div class="kc-c">${(p[k].items||[]).join('<br>')}</div></div>`).join('');
     $('full-report').textContent = p.full_report; $('knowledge-result').style.display = 'block';
-    setStatus('s3-status', '✓ 分析完成', 'as'); setBar('analyze-pb', 100);
+    setStatus('s3-status', '✓ 分析完成，正在全自动写入飞书...', 'ai'); 
+    setBar('analyze-pb', 100);
+    
+    await saveKnowledge();
+    
   } catch (e) { setStatus('s3-status', e.message, 'ae'); } finally { $('btn-analyze').disabled = false; }
 }
 
 async function generateCopy() {
-  $('btn-gen').disabled = true; showPw('gen-pw'); setBar('gen-pb', 40); setStatus('s4-status', '通义千问 生成中...', 'ai');
+  const count = parseInt($('genCount').value) || 3;
+  $('btn-gen').disabled = true; showPw('gen-pw'); setBar('gen-pb', 40); 
+  setStatus('s4-status', '通义千问 生成中...', 'ai');
+  $('c-save-status').innerHTML = ''; 
+
   try {
-    const res = await callQwen("你是博主，写爆款文案。注意：必须严格输出JSON！", `产品：${$('prodName').value}\n卖点：${$('prodSell').value}\n参考：${JSON.stringify(S.knowledge)}\n\n输出JSON：{"copies":[{"index":1,"style":"风格","title":"标题","body":"正文"}]}`);
+    // ── 核心排版指令强化 ──
+    const sysPrompt = "你是顶尖小红书爆款写手。必须严格遵守字数、换行排版规则，严格输出JSON格式。";
+    const userPrompt = `产品：${$('prodName').value}\n卖点：${$('prodSell').value}\n参考：${JSON.stringify(S.knowledge)}\n\n要求：
+1. 请一共生成 ${count} 个不同风格的版本。
+2. 【标题强制要求】：小红书标题字数严格限制在20个字符以内（含标点和表情），越短越好！
+3. 【正文排版强制要求】（极其重要）：小红书手机端每行最多显示23个字。为了完美的视觉体验，正文（body）必须频繁换行！请确保正文的**每一行绝对不超过23个字符**（包含标点和表情）。写到18-22个字就必须强制加一个换行符（\\n）。
+4. 【视觉节奏】：多用短句，善用表情符号（Emoji），段落之间要有空行留白，绝对不能出现大段密集的文字。
+5. 必须输出严格的JSON。
+
+输出JSON：{"copies":[{"index":1,"style":"风格","title":"小于20字的短标题","body":"严格控制行字数、频繁换行的正文"}]}`;
+    
+    const res = await callQwen(sysPrompt, userPrompt);
     const p = JSON.parse(res); S.copies = p.copies || p;
-    $('copy-cards').innerHTML = (S.copies).map(c=>`<div class="card"><div style="font-weight:600">${c.title}</div><div style="font-size:13px;white-space:pre-wrap;margin-top:8px">${c.body}</div></div>`).join('');
-    $('copy-results').style.display = 'block'; setStatus('s4-status', '✓ 生成成功', 'as'); setBar('gen-pb', 100);
+    
+    $('copy-cards').innerHTML = (S.copies).map(c=>{
+      const len = c.title.length;
+      const lenColor = len > 20 ? 'color:red;' : 'color:#888;';
+      return `<div class="card"><div style="font-weight:600">${c.title} <span style="font-size:11px;${lenColor}font-weight:normal;">(${len} 字符)</span></div><div style="font-size:13px;line-height:2;white-space:pre-wrap;margin-top:12px">${c.body}</div></div>`;
+    }).join('');
+    
+    $('copy-results').style.display = 'block'; 
+    setStatus('s4-status', '✓ 生成完成，正在全自动同步至飞书...', 'ai'); 
+    setBar('gen-pb', 100);
+    
+    await saveCopy();
+    
   } catch (e) { setStatus('s4-status', e.message, 'ae'); } finally { $('btn-gen').disabled = false; }
 }
 
-// ── 核心修复 2：更聪明的确保表格逻辑 ──
 async function ensureTable(token, type) {
   const url = (type === 'knowledge' ? $('knowledgeTableUrl') : $('copyTableUrl')).value.trim();
-  if (!url) throw new Error("缺少表格链接，请返回第一步填写！");
+  if (!url) throw new Error("缺少表格链接！");
   
   const p = parseUrl(url); 
-  if (!p || !p.appToken) {
-    throw new Error("链接格式错误：必须包含 /base/。\n如果是知识库(wiki)链接，请在表格右上角点击「•••」->「在独立窗口打开」，然后再复制新网址！");
-  }
+  if (!p || !p.appToken) throw new Error("链接格式错误，必须包含 /base/");
 
   let tableId = p.tableId;
-  
   if (!tableId) {
-    const res = await fetch(proxyUrl(`https://open.feishu.cn/open-apis/bitable/v1/apps/${p.appToken}/tables`), {
-      headers: { 'Authorization': 'Bearer ' + token }
-    });
+    const res = await fetch(proxyUrl(`https://open.feishu.cn/open-apis/bitable/v1/apps/${p.appToken}/tables`), { headers: { 'Authorization': 'Bearer ' + token } });
     const d = await res.json();
     if (d.code === 0 && d.data && d.data.items && d.data.items.length > 0) {
       tableId = d.data.items[0].table_id;
     } else {
-      throw new Error("无法读取该多维表格！\n请检查：你是否已将「应用机器人」添加为该表格的协作者？");
+      throw new Error("无法读取多维表格，请检查机器人权限");
     }
   }
-
   return { appToken: p.appToken, tableId: tableId };
 }
 
 async function saveKnowledge() {
-  if (!S.knowledge) { alert("数据为空，请先点击【开始深度分析】！"); return; }
+  if (!S.knowledge) return;
   const url = $('knowledgeTableUrl').value.trim();
-  if (!url) { alert("⚠️ 错误：你没有填写知识点表格链接！"); return; }
+  if (!url) { setStatus('k-save-status', '⚠️ 知识点生成成功，但未填写输出表格链接，取消自动同步。', 'aw'); return; }
   
-  setStatus('k-save-status', '正在写入飞书...', 'ai');
   try {
     const token = await getToken();
     const { appToken, tableId } = await ensureTable(token, 'knowledge');
@@ -378,30 +412,25 @@ async function saveKnowledge() {
       return { fields: { '分析维度': S.knowledge[k].title, '内容': text, '更新时间': new Date().toLocaleDateString() } };
     });
     await batchWrite(token, appToken, tableId, records);
-    setStatus('k-save-status', '✓ 已成功存入飞书', 'as');
-    alert("写入飞书成功！");
+    setStatus('s3-status', '✓ 分析完成，并且已全自动写入飞书！', 'as');
   } catch (e) { 
-    setStatus('k-save-status', '❌ 写入失败：' + e.message, 'ae');
-    alert("❌ 写入失败：\n" + e.message);
+    setStatus('k-save-status', '❌ 自动同步失败：' + e.message, 'ae');
   }
 }
 
 async function saveCopy() {
-  if (!S.copies || !S.copies.length) { alert("文案为空，请先点击【AI 生成】！"); return; }
+  if (!S.copies || !S.copies.length) return;
   const url = $('copyTableUrl').value.trim();
-  if (!url) { alert("⚠️ 错误：你没有填写生成文案表格链接！"); return; }
+  if (!url) { setStatus('c-save-status', '⚠️ 文案生成成功，但未填写输出表格链接，取消自动同步。', 'aw'); return; }
   
-  setStatus('c-save-status', '正在同步至飞书...', 'ai');
   try {
     const token = await getToken();
     const { appToken, tableId } = await ensureTable(token, 'copy');
     const records = S.copies.map(c=>({ fields: { '产品名称': $('prodName').value, '文案标题': c.title, '正文内容': c.body, '状态': '待发布' } }));
     await batchWrite(token, appToken, tableId, records);
-    setStatus('c-save-status', '✓ 已同步至飞书', 'as');
-    alert("同步飞书成功！");
+    setStatus('s4-status', '✓ 生成完成，并且已全自动同步至飞书！', 'as');
   } catch (e) { 
-    setStatus('c-save-status', '❌ 写入失败：' + e.message, 'ae');
-    alert("❌ 写入失败：\n" + e.message);
+    setStatus('c-save-status', '❌ 自动同步失败：' + e.message, 'ae');
   }
 }
 
