@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>小红书爆款文案工作台 - Gemini 增强版</title>
+<title>小红书爆款文案工作台 - 通义千问版</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600&family=DM+Mono:wght@400;500&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -138,8 +138,11 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:20px 0}
 <div class="sec" id="step-3">
   <div class="card">
     <div class="ct"><span class="cn cn-red">3</span>AI 分析爆款规律</div>
-    <div class="fr"><label>品类补充说明</label><input type="text" id="catHint" placeholder="例如：苏打饼干"></div>
-    <div class="br"><button class="btn btn-p" id="btn-analyze" onclick="analyzeDoc()">开始 Gemini 分析</button></div>
+    <div class="fr"><label>品类补充说明（可选）</label><input type="text" id="catHint" placeholder="例如：苏打饼干"></div>
+    <div class="br">
+      <button class="btn btn-p" id="btn-analyze" onclick="analyzeDoc()">开始通义千问深度分析</button>
+      <button class="btn btn-g" onclick="goStep(2)">← 返回</button>
+    </div>
     <div class="pw" id="analyze-pw" style="display:none"><div class="pb-bg"><div class="pb" id="analyze-pb"></div></div><div class="plog" id="analyze-log"></div></div>
     <div id="s3-status"></div>
   </div>
@@ -162,8 +165,8 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:20px 0}
   <div class="card">
     <div class="ct"><span class="cn cn-red">4</span>生成爆款文案</div>
     <div class="f2">
-      <div class="fr"><label>产品名称</label><input type="text" id="prodName"></div>
-      <div class="fr"><label>卖点</label><input type="text" id="prodSell"></div>
+      <div class="fr"><label>产品名称</label><input type="text" id="prodName" placeholder="输入产品名"></div>
+      <div class="fr"><label>核心卖点</label><input type="text" id="prodSell" placeholder="输入卖点"></div>
     </div>
     <div class="br"><button class="btn btn-p" id="btn-gen" onclick="generateCopy()">AI 生成</button></div>
     <div class="pw" id="gen-pw" style="display:none"><div class="pb-bg"><div class="pb" id="gen-pb"></div></div></div>
@@ -226,15 +229,28 @@ async function getToken() {
   return S.token;
 }
 
-async function callGemini(sys, user) {
-  const endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
-  const res = await fetch(proxyUrl(endpoint), {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ contents: [{ parts: [{ text: sys + "\n\n" + user }] }], generationConfig: { response_mime_type: "application/json" } })
+// --- 核心修改：调用阿里云通义千问 (DashScope API) ---
+async function callQwen(sys, user) {
+  // 使用千问的 OpenAI 兼容接口，极速稳定
+  const endpoint = 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
+  const apiUrl = proxyUrl(endpoint);
+  
+  const res = await fetch(apiUrl, {
+    method: 'POST', 
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: "qwen-plus", // 使用通义千问 Plus 模型（性价比、能力极佳）
+      messages: [
+        { role: "system", content: sys },
+        { role: "user", content: user }
+      ],
+      response_format: { type: "json_object" } // 强制通义千问返回 JSON 格式
+    })
   });
+  
   const d = await res.json();
-  if (!res.ok) throw new Error(d.error?.message || 'Gemini 失败');
-  return d.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  if (!res.ok) throw new Error(d.error?.message || '通义千问 API 失败，请检查 API Key 余额及配置');
+  return d.choices?.[0]?.message?.content || '';
 }
 
 async function step1Next() {
@@ -280,9 +296,9 @@ function confirmColMap() {
 }
 
 async function analyzeDoc() {
-  $('btn-analyze').disabled = true; showPw('analyze-pw'); setBar('analyze-pb', 40); setStatus('s3-status', 'Gemini 分析中...', 'ai');
+  $('btn-analyze').disabled = true; showPw('analyze-pw'); setBar('analyze-pb', 40); setStatus('s3-status', '通义千问 分析中...', 'ai');
   try {
-    const res = await callGemini("你是专家，分析规律并输出 JSON。", `素材：\n${S.docContent.slice(0,10000)}`);
+    const res = await callQwen("你是小红书专家，分析规律。注意：输出必须是严格的JSON格式！", `素材：\n${S.docContent.slice(0,8000)}\n\n输出JSON：\n{"hook_patterns":{"title":"开头钩子","items":["点1"]},"structure_template":{"title":"结构模板","items":["点1"]},"emotion_words":{"title":"爆款词","items":["点1"]},"selling_angles":{"title":"切入角度","items":["点1"]},"cta_patterns":{"title":"引导套路","items":["点1"]},"title_formula":{"title":"标题公式","items":["点1"]},"full_report":"分析报告"}`);
     const p = JSON.parse(res); S.knowledge = p;
     $('kg-grid').innerHTML = Object.keys(p).filter(k=>k!=='full_report').map(k=>`<div class="kc"><div class="kc-l">${p[k].title}</div><div class="kc-c">${p[k].items.join('<br>')}</div></div>`).join('');
     $('full-report').textContent = p.full_report; $('knowledge-result').style.display = 'block';
@@ -291,9 +307,9 @@ async function analyzeDoc() {
 }
 
 async function generateCopy() {
-  $('btn-gen').disabled = true; showPw('gen-pw'); setBar('gen-pb', 40); setStatus('s4-status', '生成中...', 'ai');
+  $('btn-gen').disabled = true; showPw('gen-pw'); setBar('gen-pb', 40); setStatus('s4-status', '通义千问 生成中...', 'ai');
   try {
-    const res = await callGemini("写爆款文案，输出 JSON。", `产品：${$('prodName').value}\n卖点：${$('prodSell').value}\n参考：${JSON.stringify(S.knowledge)}`);
+    const res = await callQwen("你是博主，写爆款文案。注意：输出必须是严格的JSON格式！", `产品：${$('prodName').value}\n卖点：${$('prodSell').value}\n参考：${JSON.stringify(S.knowledge)}\n\n输出JSON：{"copies":[{"index":1,"style":"风格","title":"标题","body":"正文"}]}`);
     const p = JSON.parse(res); S.copies = p.copies || p;
     $('copy-cards').innerHTML = (S.copies).map(c=>`<div class="card"><div style="font-weight:600">${c.title}</div><div style="font-size:13px;white-space:pre-wrap">${c.body}</div></div>`).join('');
     $('copy-results').style.display = 'block'; setStatus('s4-status', '✓ 生成成功', 'as'); setBar('gen-pb', 100);
