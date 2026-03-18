@@ -321,7 +321,7 @@ function confirmColMap() {
   $('preview-table').innerHTML = html + '</tbody>';
 
   $('data-preview-card').style.display = 'block'; 
-  setStatus('col-map-status', '✓ 素材解析成功，请点击“进入 AI 分析”', 'as');
+  setStatus('col-map-status', `✓ 素材解析成功！后台已成功提取 <b>${S.rawRows.length}</b> 条文案数据（上方仅展示前 5 条预览）。请点击“进入 AI 分析”`, 'as');
 }
 
 async function analyzeDoc() {
