@@ -3,9 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>小红书爆款文案工作台 - Gemini 稳定版</title>
+<title>小红书爆款文案工作台 - Gemini 增强版</title>
 <style>
-/* 样式保留你之前的，此处省略以节省篇幅 */
 @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600&family=DM+Mono:wght@400;500&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{ --red:#D93025;--red2:#FFF0EE;--ink:#1C1410;--ink2:#4B3F38;--ink3:#9C8F87; --cream:#FDFAF6;--cream2:#F5F0E8;--cream3:#EDE5D8;--gold:#C8954A; --green:#2A6B4A;--green2:#EAF3ED;--border:#E2D9CE; --shadow:0 2px 12px rgba(28,20,16,.08);--r:10px; }
@@ -139,11 +138,8 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:20px 0}
 <div class="sec" id="step-3">
   <div class="card">
     <div class="ct"><span class="cn cn-red">3</span>AI 分析爆款规律</div>
-    <div class="fr"><label>品类补充说明（可选）</label><input type="text" id="catHint" placeholder="例如：苏打饼干"></div>
-    <div class="br">
-      <button class="btn btn-p" id="btn-analyze" onclick="analyzeDoc()">开始 Gemini 深度分析</button>
-      <button class="btn btn-g" onclick="goStep(2)">← 返回</button>
-    </div>
+    <div class="fr"><label>品类补充说明</label><input type="text" id="catHint" placeholder="例如：苏打饼干"></div>
+    <div class="br"><button class="btn btn-p" id="btn-analyze" onclick="analyzeDoc()">开始 Gemini 分析</button></div>
     <div class="pw" id="analyze-pw" style="display:none"><div class="pb-bg"><div class="pb" id="analyze-pb"></div></div><div class="plog" id="analyze-log"></div></div>
     <div id="s3-status"></div>
   </div>
@@ -153,7 +149,10 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:20px 0}
       <div class="kg" id="kg-grid"></div>
       <hr class="dv">
       <div class="rb"><div class="rt" id="full-report"></div></div>
-      <div class="br" style="margin-top:16px"><button class="btn btn-gr" onclick="saveKnowledge()">写入飞书知识库</button></div>
+      <div class="br" style="margin-top:16px">
+        <button class="btn btn-gr" onclick="saveKnowledge()">写入飞书知识库</button>
+        <button class="btn btn-p" onclick="goStep(4)">去写文案 →</button>
+      </div>
       <div id="k-save-status"></div>
     </div>
   </div>
@@ -161,28 +160,26 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:20px 0}
 
 <div class="sec" id="step-4">
   <div class="card">
-    <div class="ct"><span class="cn cn-red">4</span>输入产品信息</div>
+    <div class="ct"><span class="cn cn-red">4</span>生成爆款文案</div>
     <div class="f2">
-      <div class="fr"><label>产品名称</label><input type="text" id="prodName" placeholder="输入产品名"></div>
-      <div class="fr"><label>核心卖点</label><input type="text" id="prodSell" placeholder="输入卖点"></div>
+      <div class="fr"><label>产品名称</label><input type="text" id="prodName"></div>
+      <div class="fr"><label>卖点</label><input type="text" id="prodSell"></div>
     </div>
-    <div class="br"><button class="btn btn-p" id="btn-gen" onclick="generateCopy()">AI 生成爆款文案</button></div>
+    <div class="br"><button class="btn btn-p" id="btn-gen" onclick="generateCopy()">AI 生成</button></div>
+    <div class="pw" id="gen-pw" style="display:none"><div class="pb-bg"><div class="pb" id="gen-pb"></div></div></div>
     <div id="s4-status"></div>
   </div>
   <div id="copy-results" style="display:none">
     <div id="copy-cards"></div>
-    <div class="br" style="padding:0 24px"><button class="btn btn-gr" onclick="saveCopy()">同步至飞书表格</button></div>
+    <div class="br" style="padding:0 24px"><button class="btn btn-gr" onclick="saveCopy()">同步至飞书</button></div>
     <div id="c-save-status"></div>
   </div>
 </div>
-
 </main>
 
 <script>
-// --- 核心修复：功能与语法 ---
 const PROXY_BASE = window.location.origin + '/api/proxy?url=';
 function proxyUrl(url) { return PROXY_BASE + encodeURIComponent(url); }
-
 const S = { token: null, tokenExp: 0, docContent: '', rawRows: [], headers: [], colMap: {}, knowledge: null, copies: [] };
 function $(id) { return document.getElementById(id); }
 
@@ -224,63 +221,50 @@ async function getToken() {
     body: JSON.stringify({ app_id: $('appId').value.trim(), app_secret: $('appSecret').value.trim() })
   });
   const d = await res.json();
-  if (d.code !== 0) throw new Error('飞书授权失败：' + d.msg);
+  if (d.code !== 0) throw new Error('授权失败: ' + d.msg);
   S.token = d.tenant_access_token; S.tokenExp = Date.now() + (d.expire - 60) * 1000;
   return S.token;
 }
 
 async function callGemini(sys, user) {
   const endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
-  const apiUrl = '/api/proxy?url=' + encodeURIComponent(endpoint);
-  const res = await fetch(apiUrl, {
+  const res = await fetch(proxyUrl(endpoint), {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ contents: [{ parts: [{ text: sys + "\n\n" + user }] }], generationConfig: { response_mime_type: "application/json" } })
   });
   const d = await res.json();
-  if (!res.ok) throw new Error(d.error?.message || 'Gemini 接口请求异常');
+  if (!res.ok) throw new Error(d.error?.message || 'Gemini 失败');
   return d.candidates?.[0]?.content?.parts?.[0]?.text || '';
 }
 
 async function step1Next() {
   const appId = $('appId').value.trim(), appSecret = $('appSecret').value.trim(), sheetUrl = $('sheetUrl').value.trim();
-  if (!appId || !appSecret || !sheetUrl) return setStatus('s1-status', '请补全配置信息', 'ae');
+  if (!appId || !appSecret || !sheetUrl) return setStatus('s1-status', '请补全配置', 'ae');
   setStatus('s1-status', '验证中...', 'ai');
   try { await getToken(); goStep(2); } catch (e) { setStatus('s1-status', '❌ ' + e.message, 'ae'); }
 }
 
 async function fetchSheet() {
   $('btn-fetch').disabled = true; showPw('fetch-pw'); setBar('fetch-pb', 20);
-  log('fetch-log', '正在获取飞书 Token...');
   try {
     const token = await getToken();
     const sheetToken = parseUrl($('sheetUrl').value.trim()).token;
-    
-    // 获取工作表元数据
     const metaData = await (await fetch(proxyUrl(`https://open.feishu.cn/open-apis/sheets/v3/spreadsheets/${sheetToken}/sheets/query`), { headers: { 'Authorization': 'Bearer ' + token } })).json();
-    if (metaData.code !== 0) throw new Error('查询工作表列表失败');
-    
-    // --- 修复点：查找匹配的工作表名称 ---
     const sheets = metaData.data.sheets || [];
     const targetName = $('sheetName').value.trim();
     let targetSheet = sheets[0];
+    
     if (targetName) {
       const found = sheets.find(s => s.title === targetName);
-      if (found) {
-        targetSheet = found;
-        log('fetch-log', `✓ 已定位工作表：${targetName}`);
-      } else {
-        log('fetch-log', `⚠️ 未找到名为 "${targetName}" 的表，默认使用第一个表`);
-      }
+      if (found) targetSheet = found;
     }
-
+    
     const range = `${targetSheet.sheet_id}!A1:Z500`;
     const dataJson = await (await fetch(proxyUrl(`https://open.feishu.cn/open-apis/sheets/v2/spreadsheets/${sheetToken}/values/${encodeURIComponent(range)}`), { headers: { 'Authorization': 'Bearer ' + token } })).json();
     const values = dataJson.data.valueRange.values;
-    if (!values || values.length < 2) throw new Error('表格数据不足（至少需表头+1行数据）');
-
     S.headers = values[0].map(h => extractText(h)); S.rawRows = values.slice(1);
     renderColMapUI(S.headers); $('col-map-card').style.display = 'block'; setBar('fetch-pb', 100);
-    setStatus('s2-status', `✓ 读取成功 [${targetSheet.title}]`, 'as');
+    setStatus('s2-status', `✓ 已读取: ${targetSheet.title}`, 'as');
   } catch (e) { setStatus('s2-status', e.message, 'ae'); } finally { $('btn-fetch').disabled = false; }
 }
 
@@ -292,28 +276,67 @@ function renderColMapUI(headers) {
 function confirmColMap() {
   S.colMap = { title: parseInt($('col-title').value), body: parseInt($('col-body').value), product: parseInt($('col-product').value) };
   S.docContent = S.rawRows.map((row, i) => `--- ${i+1} ---\n【产品】${extractText(row[S.colMap.product])}\n【标题】${extractText(row[S.colMap.title])}\n【正文】${extractText(row[S.colMap.body])}`).join('\n\n');
-  $('data-preview-card').style.display = 'block'; setStatus('col-map-status', '已提取素材，请进入下一步', 'as');
+  $('data-preview-card').style.display = 'block'; setStatus('col-map-status', '素材解析成功', 'as');
 }
 
 async function analyzeDoc() {
-  $('btn-analyze').disabled = true; showPw('analyze-pw'); setBar('analyze-pb', 40);
+  $('btn-analyze').disabled = true; showPw('analyze-pw'); setBar('analyze-pb', 40); setStatus('s3-status', 'Gemini 分析中...', 'ai');
   try {
-    const res = await callGemini("你是小红书专家，分析文案规律并输出 JSON。", `素材：\n${S.docContent.slice(0,10000)}`);
+    const res = await callGemini("你是专家，分析规律并输出 JSON。", `素材：\n${S.docContent.slice(0,10000)}`);
     const p = JSON.parse(res); S.knowledge = p;
     $('kg-grid').innerHTML = Object.keys(p).filter(k=>k!=='full_report').map(k=>`<div class="kc"><div class="kc-l">${p[k].title}</div><div class="kc-c">${p[k].items.join('<br>')}</div></div>`).join('');
-    $('full-report').textContent = p.full_report; $('knowledge-result').style.display = 'block'; setBar('analyze-pb', 100);
+    $('full-report').textContent = p.full_report; $('knowledge-result').style.display = 'block';
+    setStatus('s3-status', '✓ 分析完成', 'as'); setBar('analyze-pb', 100);
   } catch (e) { setStatus('s3-status', e.message, 'ae'); } finally { $('btn-analyze').disabled = false; }
 }
 
 async function generateCopy() {
-  $('btn-gen').disabled = true; showPw('gen-pw'); setBar('gen-pb', 50);
+  $('btn-gen').disabled = true; showPw('gen-pw'); setBar('gen-pb', 40); setStatus('s4-status', '生成中...', 'ai');
   try {
-    const res = await callGemini("你是博主，根据规律写文案并输出 JSON。", `产品：${$('prodName').value}\n卖点：${$('prodSell').value}\n参考：${JSON.stringify(S.knowledge)}`);
-    const p = JSON.parse(res); S.copies = p.copies;
-    $('copy-cards').innerHTML = p.copies.map(c=>`<div class="card"><div style="font-weight:600">${c.title}</div><div style="font-size:13px;white-space:pre-wrap">${c.body}</div></div>`).join('');
-    $('copy-results').style.display = 'block'; setBar('gen-pb', 100);
+    const res = await callGemini("写爆款文案，输出 JSON。", `产品：${$('prodName').value}\n卖点：${$('prodSell').value}\n参考：${JSON.stringify(S.knowledge)}`);
+    const p = JSON.parse(res); S.copies = p.copies || p;
+    $('copy-cards').innerHTML = (S.copies).map(c=>`<div class="card"><div style="font-weight:600">${c.title}</div><div style="font-size:13px;white-space:pre-wrap">${c.body}</div></div>`).join('');
+    $('copy-results').style.display = 'block'; setStatus('s4-status', '✓ 生成成功', 'as'); setBar('gen-pb', 100);
   } catch (e) { setStatus('s4-status', e.message, 'ae'); } finally { $('btn-gen').disabled = false; }
 }
 
 async function saveKnowledge() {
-  if (!S.knowledge)
+  if (!S.knowledge) return;
+  setStatus('k-save-status', '保存中...', 'ai');
+  try {
+    const token = await getToken();
+    const { appToken, tableId } = await ensureTable(token, 'knowledge');
+    const records = Object.keys(S.knowledge).filter(k=>k!=='full_report').map(k=>({ fields: { '分析维度': S.knowledge[k].title, '内容': S.knowledge[k].items.join('\n'), '更新时间': new Date().toLocaleDateString() } }));
+    await batchWrite(token, appToken, tableId, records);
+    setStatus('k-save-status', '✓ 已存入飞书', 'as');
+  } catch (e) { setStatus('k-save-status', e.message, 'ae'); }
+}
+
+async function saveCopy() {
+  if (!S.copies.length) return;
+  setStatus('c-save-status', '同步中...', 'ai');
+  try {
+    const token = await getToken();
+    const { appToken, tableId } = await ensureTable(token, 'copy');
+    const records = S.copies.map(c=>({ fields: { '产品名称': $('prodName').value, '文案标题': c.title, '正文内容': c.body, '状态': '待发布' } }));
+    await batchWrite(token, appToken, tableId, records);
+    setStatus('c-save-status', '✓ 已同步至飞书', 'as');
+  } catch (e) { setStatus('c-save-status', e.message, 'ae'); }
+}
+
+async function ensureTable(token, type) {
+  const url = (type === 'knowledge' ? $('knowledgeTableUrl') : $('copyTableUrl')).value.trim();
+  if (url) { const p = parseUrl(url); if (p && p.tableId) return { appToken: p.appToken, tableId: p.tableId }; }
+  throw new Error(`请先在配置页填入多维表格链接`);
+}
+
+async function batchWrite(token, appToken, tableId, records) {
+  const res = await fetch(proxyUrl(`https://open.feishu.cn/open-apis/bitable/v1/apps/${appToken}/tables/${tableId}/records/batch_create`), {
+    method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ records })
+  });
+  const d = await res.json(); if (d.code !== 0) throw new Error(d.msg);
+}
+</script>
+</body>
+</html>
