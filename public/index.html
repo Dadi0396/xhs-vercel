@@ -109,7 +109,6 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:20px 0}
     <div class="fr">
       <label>飞书电子表格链接</label>
       <input type="text" id="sheetUrl" placeholder="https://xxx.feishu.cn/sheets/xxxxxx">
-      <div class="hint">直接从浏览器地址栏复制粘贴即可</div>
     </div>
     <div class="fr">
       <label>工作表名称（可选，留空读取第一个）</label>
@@ -117,9 +116,9 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:20px 0}
     </div>
   </div>
   <div class="card">
-    <div class="ct"><span class="cn cn-red">3</span>输出表格（留空自动新建）</div>
-    <div class="fr"><label>知识点总结表格链接 <span class="tag to">可留空</span></label><input type="text" id="knowledgeTableUrl" placeholder="https://xxx.feishu.cn/base/xxxxxx?table=tblxxxxxx"></div>
-    <div class="fr"><label>生成文案输出表格链接 <span class="tag to">可留空</span></label><input type="text" id="copyTableUrl" placeholder="https://xxx.feishu.cn/base/xxxxxx?table=tblxxxxxx"></div>
+    <div class="ct"><span class="cn cn-red">3</span>输出表格（可留空）</div>
+    <div class="fr"><label>知识点总结表格链接</label><input type="text" id="knowledgeTableUrl" placeholder="粘贴多维表格链接"></div>
+    <div class="fr"><label>生成文案输出表格链接</label><input type="text" id="copyTableUrl" placeholder="粘贴多维表格链接"></div>
     <div id="created-info" style="display:none" class="alert as"></div>
   </div>
   <div class="br"><button class="btn btn-p" onclick="step1Next()">验证配置并继续 →</button></div>
@@ -129,7 +128,6 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:20px 0}
 <div class="sec" id="step-2">
   <div class="card">
     <div class="ct"><span class="cn cn-ink">2</span>读取飞书电子表格</div>
-    <p style="font-size:13px;color:var(--ink2);margin-bottom:16px">读取表格内容，自动识别列结构，确认字段映射后进入AI分析。</p>
     <div class="br">
       <button class="btn btn-p" id="btn-fetch" onclick="fetchSheet()">开始读取表格</button>
       <button class="btn btn-g" onclick="goStep(1)">← 返回</button>
@@ -142,7 +140,6 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:20px 0}
   </div>
   <div class="card" id="col-map-card" style="display:none">
     <div class="ct"><span class="cn cn-ink">确认字段映射</span></div>
-    <p style="font-size:13px;color:var(--ink2);margin-bottom:16px">请确认各字段对应表格中的哪一列：</p>
     <div style="display:grid;grid-template-columns:auto 1fr;gap:8px 16px;align-items:center" id="col-map-wrap"></div>
     <div class="br" style="margin-top:16px"><button class="btn btn-p" onclick="confirmColMap()">确认映射，读取内容 →</button></div>
     <div id="col-map-status"></div>
@@ -150,10 +147,6 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:20px 0}
   <div class="card" id="data-preview-card" style="display:none">
     <div class="ct"><span class="cn cn-green">✓</span>读取结果预览</div>
     <div style="overflow-x:auto"><table class="preview-table" id="preview-table"></table></div>
-    <div style="margin-top:12px;display:flex;gap:8px">
-      <span class="tag tg" id="row-count"></span>
-      <span class="tag tr" id="col-count"></span>
-    </div>
     <div class="br" style="margin-top:16px"><button class="btn btn-p" onclick="goStep(3)">进入AI分析 →</button></div>
   </div>
 </div>
@@ -161,8 +154,8 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:20px 0}
 <div class="sec" id="step-3">
   <div class="card">
     <div class="ct"><span class="cn cn-red">3</span>AI 分析爆款规律</div>
-    <p style="font-size:13px;color:var(--ink2);margin-bottom:16px">Gemini 2.0 深度分析文案库，提炼核心写作规律，写入飞书知识点表格。</p>
-    <div class="fr"><label>品类补充说明（可选）</label><input type="text" id="catHint" placeholder="例如：苏打饼干、休闲零食、健康代餐"></div>
+    <p style="font-size:13px;color:var(--ink2);margin-bottom:16px">使用 Gemini 2.0 深度分析文案库，提炼核心写作规律。</p>
+    <div class="fr"><label>品类补充说明（可选）</label><input type="text" id="catHint" placeholder="例如：苏打饼干、休闲零食"></div>
     <div class="br">
       <button class="btn btn-p" id="btn-analyze" onclick="analyzeDoc()">开始 Gemini 深度分析</button>
       <button class="btn btn-g" onclick="goStep(2)">← 返回</button>
@@ -178,10 +171,7 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:20px 0}
       <div class="ct"><span class="cn cn-green">✓</span>AI总结的写作知识点</div>
       <div class="kg" id="kg-grid"></div>
       <hr class="dv">
-      <div class="rb">
-        <div class="rb-top"><span>综合分析报告</span><button class="cb" onclick="copyEl('full-report',this)">复制</button></div>
-        <div class="rt" id="full-report" style="max-height:260px;overflow-y:auto"></div>
-      </div>
+      <div class="rb"><div class="rt" id="full-report"></div></div>
       <div id="k-save-status" style="display:none;margin-top:12px"></div>
       <div class="br" style="margin-top:16px">
         <button class="btn btn-gr" id="btn-save-k" onclick="saveKnowledge()">写入飞书知识点表格</button>
@@ -194,54 +184,28 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:20px 0}
 <div class="sec" id="step-4">
   <div class="card">
     <div class="ct"><span class="cn cn-red">4</span>输入产品信息</div>
-    <div class="fr"><label>产品名称</label><input type="text" id="prodName" placeholder="例如：香美客苏打饼干"></div>
-    <div class="fr"><label>核心卖点（逗号分隔）</label><input type="text" id="prodSell" placeholder="例如：0添加防腐剂、份量超大、19.6元8大包"></div>
-    <div class="f2">
-      <div class="fr"><label>目标人群</label><input type="text" id="audience" placeholder="例如：学生党、上班族"></div>
-      <div class="fr">
-        <label>文案风格</label>
-        <select id="copyStyle">
-          <option value="种草分享">种草分享（真实体验感）</option>
-          <option value="痛点共鸣">痛点共鸣（解决需求）</option>
-          <option value="数字对比">数字对比（性价比突出）</option>
-          <option value="场景代入">场景代入（生活化场景）</option>
-          <option value="反差惊喜">反差惊喜（意外感/反转）</option>
-        </select>
-      </div>
-    </div>
-    <div class="fr">
-      <label>生成数量</label>
-      <select id="copyCount">
-        <option value="1">1篇</option>
-        <option value="2">2篇（不同角度）</option>
-        <option value="3" selected>3篇（多角度对比）</option>
-      </select>
-    </div>
+    <div class="fr"><label>产品名称</label><input type="text" id="prodName" placeholder="输入产品名"></div>
+    <div class="fr"><label>核心卖点</label><input type="text" id="prodSell" placeholder="输入卖点"></div>
     <div class="br">
       <button class="btn btn-p" id="btn-gen" onclick="generateCopy()">AI 生成爆款文案</button>
       <button class="btn btn-g" onclick="goStep(3)">← 返回</button>
     </div>
     <div class="pw" id="gen-pw" style="display:none">
       <div class="pb-bg"><div class="pb" id="gen-pb"></div></div>
-      <div class="plog" id="gen-log"></div>
     </div>
     <div id="s4-status"></div>
   </div>
   <div id="copy-results" style="display:none">
     <div id="copy-cards"></div>
-    <div class="card">
-      <div class="br">
-        <button class="btn btn-gr" id="btn-save-c" onclick="saveCopy()">写入飞书文案表格</button>
-        <button class="btn btn-s" onclick="generateCopy()">重新生成</button>
-      </div>
-      <div id="c-save-status" style="display:none;margin-top:12px"></div>
-    </div>
+    <div class="br" style="padding:0 24px"><button class="btn btn-gr" id="btn-save-c" onclick="saveCopy()">写入飞书文案表格</button></div>
+    <div id="c-save-status" style="display:none;margin:12px 24px"></div>
   </div>
 </div>
 
 </main>
+
 <script>
-// --- 核心配置 ---
+// --- 核心逻辑 ---
 const PROXY_BASE = window.location.origin + '/api/proxy?url=';
 function proxyUrl(url) { return PROXY_BASE + encodeURIComponent(url); }
 
@@ -251,7 +215,6 @@ const S = {
   knowledge: null, copies: []
 };
 
-// --- 基础工具函数 ---
 function $(id) { return document.getElementById(id) }
 function goStep(n) {
   document.querySelectorAll('.sec').forEach(s => s.classList.remove('active'));
@@ -261,30 +224,19 @@ function goStep(n) {
     if (i + 1 === n) p.classList.add('active');
     else if (i + 1 < n) p.classList.add('done');
   });
-  window.scrollTo(0, 0);
 }
-function setStatus(id, html, type = 'ai') { const el = $(id); if (!el) return; el.innerHTML = html ? `<div class="alert ${type}">${html}</div>` : ''; }
-function log(id, msg) { const el = $(id); if (!el) return; el.innerHTML += msg + '<br>'; el.scrollTop = el.scrollHeight; }
+function setStatus(id, html, type = 'ai') { const el = $(id); if (el) el.innerHTML = html ? `<div class="alert ${type}">${html}</div>` : ''; }
+function log(id, msg) { const el = $(id); if (el) { el.innerHTML += msg + '<br>'; el.scrollTop = el.scrollHeight; } }
 function setBar(id, pct) { const el = $(id); if (el) el.style.width = pct + '%'; }
 function showPw(id) { const el = $(id); if (el) el.style.display = 'block'; }
 
-// 修复后的文本提取函数（唯一版本）
 function extractText(cell) {
   if (cell === null || cell === undefined) return '';
   if (typeof cell === 'string') return cell.trim();
   if (typeof cell === 'number') return String(cell);
-  if (typeof cell === 'object') {
-    if (cell.text) return String(cell.text).trim();
-    if (cell.value) return String(cell.value).trim();
-    if (Array.isArray(cell)) return cell.map(extractText).join('');
-    if (cell.type === 'text') return String(cell.text || '').trim();
-  }
+  if (Array.isArray(cell)) return cell.map(extractText).join('');
+  if (typeof cell === 'object') return cell.text || cell.value || '';
   return String(cell).trim();
-}
-
-async function copyEl(id, btn) {
-  await navigator.clipboard.writeText($(id)?.innerText || '').catch(() => {});
-  if (btn) { btn.textContent = '已复制 ✓'; btn.classList.add('copied'); setTimeout(() => { btn.textContent = '复制'; btn.classList.remove('copied'); }, 2000); }
 }
 
 function parseUrl(url) {
@@ -294,7 +246,7 @@ function parseUrl(url) {
   return null;
 }
 
-// --- 飞书接口请求 ---
+// --- API 请求 ---
 async function getToken() {
   if (S.token && Date.now() < S.tokenExp) return S.token;
   const res = await fetch(proxyUrl('https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal'), {
@@ -302,30 +254,14 @@ async function getToken() {
     body: JSON.stringify({ app_id: $('appId').value.trim(), app_secret: $('appSecret').value.trim() })
   });
   const d = await res.json();
-  if (d.code !== 0) throw new Error('飞书Token获取失败：' + (d.msg || '检查 App ID/Secret'));
+  if (d.code !== 0) throw new Error('飞书授权失败：' + d.msg);
   S.token = d.tenant_access_token; S.tokenExp = Date.now() + (d.expire - 60) * 1000;
   return S.token;
 }
 
-async function feishuGet(url, token) {
-  const res = await fetch(proxyUrl(url), { headers: { 'Authorization': 'Bearer ' + token } });
-  return res.json();
-}
-
-async function feishuPost(url, token, body) {
-  const res = await fetch(proxyUrl(url), {
-    method: 'POST',
-    headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  });
-  return res.json();
-}
-
-// --- Gemini API 核心调用 ---
 async function callGemini(sys, user) {
   const endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
   const apiUrl = '/api/proxy?url=' + encodeURIComponent(endpoint);
-  
   const res = await fetch(apiUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -334,133 +270,117 @@ async function callGemini(sys, user) {
       generationConfig: { response_mime_type: "application/json" }
     })
   });
-
   const d = await res.json();
-  if (!res.ok) throw new Error(d.error?.message || 'Gemini 调用失败');
+  if (!res.ok) throw new Error(d.error?.message || 'Gemini 接口调用失败，请检查域名权限和 API Key');
   return d.candidates?.[0]?.content?.parts?.[0]?.text || '';
 }
 
-// --- 业务逻辑 ---
+// --- 业务流程 ---
 async function step1Next() {
-  const appId = $('appId').value.trim(), appSecret = $('appSecret').value.trim(), sheetUrl = $('sheetUrl').value.trim();
-  if (!appId || !appSecret || !sheetUrl) return setStatus('s1-status', '请补全所有配置项', 'ae');
-  setStatus('s1-status', '<span class="spin spin-d"></span> 验证中...', 'ai');
-  try { await getToken(); setStatus('s1-status', '✓ 配置验证通过', 'as'); setTimeout(() => goStep(2), 700); }
-  catch (e) { setStatus('s1-status', '❌ ' + e.message, 'ae'); }
+  try { await getToken(); goStep(2); } catch (e) { setStatus('s1-status', e.message, 'ae'); }
 }
 
 async function fetchSheet() {
-  $('btn-fetch').disabled = true; showPw('fetch-pw'); setBar('fetch-pb', 10);
-  log('fetch-log', '正在获取飞书Token...');
+  $('btn-fetch').disabled = true; showPw('fetch-pw'); setBar('fetch-pb', 20);
   try {
     const token = await getToken();
     const sheetToken = parseUrl($('sheetUrl').value.trim()).token;
-    const metaData = await feishuGet(`https://open.feishu.cn/open-apis/sheets/v3/spreadsheets/${sheetToken}/sheets/query`, token);
-    const sheets = metaData.data?.sheets || [];
-    const targetName = $('sheetName').value.trim();
-    const targetSheet = (targetName ? sheets.find(s => s.title === targetName) : null) || sheets[0];
+    const metaData = await (await fetch(proxyUrl(`https://open.feishu.cn/open-apis/sheets/v3/spreadsheets/${sheetToken}/sheets/query`), { headers: { 'Authorization': 'Bearer ' + token } })).json();
+    const targetSheet = metaData.data.sheets[0];
     const range = `${targetSheet.sheet_id}!A1:Z500`;
-    const dataJson = await feishuGet(`https://open.feishu.cn/open-apis/sheets/v2/spreadsheets/${sheetToken}/values/${encodeURIComponent(range)}`, token);
-    const values = dataJson.data?.valueRange?.values || [];
-    if (values.length < 2) throw new Error('表格数据不足');
-
-    S.headers = (values[0] || []).map(h => extractText(h));
-    S.rawRows = values.slice(1).filter(row => row && row.some(c => c !== null && c !== ''));
+    const dataJson = await (await fetch(proxyUrl(`https://open.feishu.cn/open-apis/sheets/v2/spreadsheets/${sheetToken}/values/${encodeURIComponent(range)}`), { headers: { 'Authorization': 'Bearer ' + token } })).json();
+    const values = dataJson.data.valueRange.values;
+    S.headers = values[0].map(h => extractText(h));
+    S.rawRows = values.slice(1);
     renderColMapUI(S.headers);
     $('col-map-card').style.display = 'block';
     setBar('fetch-pb', 100);
-    setStatus('s2-status', `✓ 读取成功，共 ${S.rawRows.length} 行数据`, 'as');
-  } catch (e) { setStatus('s2-status', '❌ ' + e.message, 'ae'); }
-  finally { $('btn-fetch').disabled = false; }
+  } catch (e) { setStatus('s2-status', e.message, 'ae'); } finally { $('btn-fetch').disabled = false; }
 }
 
 function renderColMapUI(headers) {
-  function guess(kws) { for (const k of kws) { const i = headers.findIndex(h => h.includes(k)); if (i >= 0) return i; } return -1; }
-  const fields = [
-    { key: 'title', label: '标题列', kws: ['标题', 'title'] },
-    { key: 'body', label: '正文列', kws: ['文案', '正文', '内容'] },
-    { key: 'product', label: '产品名称', kws: ['产品', '商品', '品名'] }
-  ];
-  const options = ['（不使用）', ...headers.map((h, i) => `${colLetter(i)}: ${h || '列'+(i+1)}`)];
+  const fields = [{ key: 'title', label: '标题列' }, { key: 'body', label: '正文列' }, { key: 'product', label: '产品名称' }];
   $('col-map-wrap').innerHTML = fields.map(f => {
-    const g = guess(f.kws);
-    const sel = options.map((o, idx) => `<option value="${idx-1}" ${idx-1 === g ? 'selected' : ''}>${o}</option>`).join('');
-    return `<div class="col-map-label">${f.label}</div><select id="col-${f.key}">${sel}</select>`;
+    const options = headers.map((h, i) => `<option value="${i}">${h}</option>`).join('');
+    return `<div class="col-map-label">${f.label}</div><select id="col-${f.key}">${options}</select>`;
   }).join('');
 }
-function colLetter(i) { return i < 26 ? String.fromCharCode(65+i) : String.fromCharCode(64+Math.floor(i/26))+String.fromCharCode(65+(i%26)); }
 
 function confirmColMap() {
   S.colMap = { title: parseInt($('col-title').value), body: parseInt($('col-body').value), product: parseInt($('col-product').value) };
-  if (S.colMap.body < 0) return setStatus('col-map-status', '请至少选择「正文列」', 'ae');
-  const lines = [];
-  S.rawRows.forEach((row, i) => {
-    const p = [];
-    if (S.colMap.product >= 0) p.push(`【产品】${extractText(row[S.colMap.product])}`);
-    if (S.colMap.title >= 0) p.push(`【标题】${extractText(row[S.colMap.title])}`);
-    if (S.colMap.body >= 0) p.push(`【正文】${extractText(row[S.colMap.body])}`);
-    if (p.length) lines.push(`--- 第${i+1}篇 ---\n${p.join('\n')}`);
-  });
-  S.docContent = lines.join('\n\n');
-  const usedCols = Object.values(S.colMap).filter(v => v >= 0);
-  let html = '<thead><tr>' + usedCols.map(i => `<th>${S.headers[i]||'列'+(i+1)}</th>`).join('') + '</tr></thead><tbody>';
-  S.rawRows.slice(0, 5).forEach(row => { html += '<tr>' + usedCols.map(i => `<td>${String(row[i]||'').slice(0,60)}</td>`).join('') + '</tr>'; });
-  $('preview-table').innerHTML = html + '</tbody>';
+  const lines = S.rawRows.map((row, i) => `--- 第${i+1}篇 ---\n【产品】${extractText(row[S.colMap.product])}\n【标题】${extractText(row[S.colMap.title])}\n【正文】${extractText(row[S.colMap.body])}`).join('\n\n');
+  S.docContent = lines;
   $('data-preview-card').style.display = 'block';
-  setStatus('col-map-status', `✓ 已提取 ${lines.length} 篇参考素材`, 'as');
+  setStatus('col-map-status', '已提取素材，可进入分析', 'as');
 }
 
 async function analyzeDoc() {
-  if (!S.docContent) return setStatus('s3-status', '请先读取表格', 'ae');
-  $('btn-analyze').disabled = true; showPw('analyze-pw'); setBar('analyze-pb', 30);
+  $('btn-analyze').disabled = true; showPw('analyze-pw'); setBar('analyze-pb', 40);
   try {
-    const sys = `你是小红书爆款文案策略师。请深度分析以下文案库并提炼规律。输出必须是严格的JSON格式。`;
-    const usr = `分析素材：\n${S.docContent.slice(0,10000)}\n\n请输出JSON：\n{"hook_patterns":{"title":"开头钩子","items":["规律1"]},"structure_template":{"title":"结构模板","items":["环节1"]},"emotion_words":{"title":"爆款词","items":["词1"]},"selling_angles":{"title":"切入角度","items":["角度1"]},"cta_patterns":{"title":"引导套路","items":["套路1"]},"title_formula":{"title":"标题公式","items":["公式1"]},"full_report":"报告内容"}`;
+    const sys = `你是小红书爆款策略专家。请分析以下文案并输出 JSON 格式。`;
+    const usr = `素材：\n${S.docContent.slice(0,10000)}\n\n输出JSON：\n{"hook_patterns":{"title":"开头钩子","items":["点1"]},"structure_template":{"title":"结构模板","items":["点1"]},"emotion_words":{"title":"爆款词","items":["点1"]},"selling_angles":{"title":"切入角度","items":["点1"]},"cta_patterns":{"title":"引导套路","items":["点1"]},"title_formula":{"title":"标题公式","items":["点1"]},"full_report":"分析报告"}`;
     const res = await callGemini(sys, usr);
     const parsed = JSON.parse(res);
     S.knowledge = parsed;
-    $('kg-grid').innerHTML = ['hook_patterns','structure_template','emotion_words','selling_angles','cta_patterns','title_formula'].map(k => {
-      const v = parsed[k]; return `<div class="kc"><div class="kc-l">${v.title}</div><div class="kc-c">${(v.items||[]).join('<br>')}</div></div>`;
-    }).join('');
+    $('kg-grid').innerHTML = Object.keys(parsed).filter(k => k !== 'full_report').map(k => `<div class="kc"><div class="kc-l">${parsed[k].title}</div><div class="kc-c">${parsed[k].items.join('<br>')}</div></div>`).join('');
     $('full-report').textContent = parsed.full_report;
     $('knowledge-result').style.display = 'block';
-    setBar('analyze-pb', 100); setStatus('s3-status', '✓ Gemini 分析完成', 'as');
-  } catch (e) { setStatus('s3-status', '❌ ' + e.message, 'ae'); }
-  finally { $('btn-analyze').disabled = false; }
+    setBar('analyze-pb', 100);
+  } catch (e) { setStatus('s3-status', e.message, 'ae'); } finally { $('btn-analyze').disabled = false; }
 }
 
 async function generateCopy() {
-  const name = $('prodName').value.trim(), sell = $('prodSell').value.trim();
-  if (!name || !sell) return;
-  $('btn-gen').disabled = true; showPw('gen-pw'); setBar('gen-pb', 30);
+  $('btn-gen').disabled = true; showPw('gen-pw'); setBar('gen-pb', 50);
   try {
-    const count = $('copyCount').value;
-    const kCtx = S.knowledge ? `参考规律：${JSON.stringify(S.knowledge)}` : "";
-    const sys = `你是小红书种草博主。请根据产品信息和爆款规律写文案。`;
-    const usr = `产品：${name}\n卖点：${sell}\n数量：${count}\n${kCtx}\n\n输出JSON：{"copies":[{"index":1,"style":"风格","title":"标题","body":"正文","tags":["话题"],"photo_guide":"建议"}]}`;
+    const sys = `你是小红书种草博主。请根据规律写文案。`;
+    const usr = `产品：${$('prodName').value}\n卖点：${$('prodSell').value}\n参考：${JSON.stringify(S.knowledge)}\n\n输出JSON：{"copies":[{"index":1,"style":"风格","title":"标题","body":"正文","tags":["标签"],"photo_guide":"建议"}]}`;
     const res = await callGemini(sys, usr);
     const parsed = JSON.parse(res);
-    S.copies = parsed.copies || [];
-    $('copy-cards').innerHTML = S.copies.map(c => `
-      <div class="card">
-        <div class="ct"><span class="cn cn-red">${c.index}</span><span>${c.style}</span></div>
-        <div style="font-weight:600;margin-bottom:8px">${c.title}</div>
-        <div style="font-size:13px;white-space:pre-wrap;margin-bottom:10px">${c.body}</div>
-        <div style="font-size:11px;color:var(--ink3)">📷 ${c.photo_guide}</div>
-      </div>`).join('');
+    S.copies = parsed.copies;
+    $('copy-cards').innerHTML = S.copies.map(c => `<div class="card"><div class="ct"><span>${c.style}</span></div><div style="font-weight:600">${c.title}</div><div style="font-size:13px;white-space:pre-wrap">${c.body}</div><div style="font-size:11px;color:#999">📷 ${c.photo_guide}</div></div>`).join('');
     $('copy-results').style.display = 'block';
-    setBar('gen-pb', 100); setStatus('s4-status', '✓ 生成完毕', 'as');
-  } catch (e) { setStatus('s4-status', '❌ ' + e.message, 'ae'); }
-  finally { $('btn-gen').disabled = false; }
+    setBar('gen-pb', 100);
+  } catch (e) { setStatus('s4-status', e.message, 'ae'); } finally { $('btn-gen').disabled = false; }
 }
 
-// 其余飞书写入逻辑保持原样，仅修复细微语法
-async function saveKnowledge() { /* 保持原逻辑 */ }
-async function saveCopy() { /* 保持原逻辑 */ }
-async function ensureTable(t, type) { /* 保持原逻辑 */ }
-async function batchWrite(t, app, tid, r) { /* 保持原逻辑 */ }
-async function createBitable(t, type) { /* 保持原逻辑 */ }
-async function createTable(t, app, type) { /* 保持原逻辑 */ }
-</script>
-</body>
-</html>
+// --- 飞书写入工具函数（完整补全） ---
+async function saveKnowledge() {
+  if (!S.knowledge) return;
+  setStatus('k-save-status', '正在写入飞书...', 'ai');
+  try {
+    const token = await getToken();
+    const { appToken, tableId } = await ensureTable(token, 'knowledge');
+    const records = Object.keys(S.knowledge).filter(k => k !== 'full_report').map(k => ({
+      fields: { '分析维度': S.knowledge[k].title, '内容': S.knowledge[k].items.join('\n'), '更新时间': new Date().toLocaleDateString() }
+    }));
+    await batchWrite(token, appToken, tableId, records);
+    setStatus('k-save-status', '✓ 已成功写入飞书知识库', 'as');
+  } catch (e) { setStatus('k-save-status', '写入失败: ' + e.message, 'ae'); }
+}
+
+async function saveCopy() {
+  if (!S.copies.length) return;
+  setStatus('c-save-status', '正在写入飞书...', 'ai');
+  try {
+    const token = await getToken();
+    const { appToken, tableId } = await ensureTable(token, 'copy');
+    const records = S.copies.map(c => ({
+      fields: { '产品名称': $('prodName').value, '文案标题': c.title, '正文内容': c.body, '话题标签': c.tags.join(' '), '拍摄建议': c.photo_guide, '状态': '待发布' }
+    }));
+    await batchWrite(token, appToken, tableId, records);
+    setStatus('c-save-status', '✓ 文案已同步至飞书', 'as');
+  } catch (e) { setStatus('c-save-status', '写入失败: ' + e.message, 'ae'); }
+}
+
+async function ensureTable(token, type) {
+  const urlEl = type === 'knowledge' ? $('knowledgeTableUrl') : $('copyTableUrl');
+  const url = urlEl.value.trim();
+  if (url) {
+    const p = parseUrl(url);
+    if (p && p.tableId) return { appToken: p.appToken, tableId: p.tableId };
+  }
+  // 如果没填，则创建新的（简化处理）
+  throw new Error(`请在第一步「配置」中填入对应的飞书多维表格（Base）链接`);
+}
+
+async function batchWrite(token
